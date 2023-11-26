@@ -70,6 +70,7 @@ def run(args):
         warmup_ratio=0.03,
         group_by_length=True,
         lr_scheduler_type="constant",
+        report_to="wandb"
     )
 
     trainer = SFTTrainer(
