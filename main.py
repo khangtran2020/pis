@@ -18,7 +18,7 @@ def run(args):
     # Model from Hugging Face hub
     base_model = f"codellama/CodeLlama-{args.model}-hf"
     dataset = f"euisuh15/{args.data}"
-    new_model = f"pis-{args.pname}"
+    new_model = f"{args.pname}"
 
     tr_data = load_dataset(dataset, split="train")
     va_data = load_dataset(dataset, split="validation")
@@ -52,7 +52,7 @@ def run(args):
     )
 
     training_params = TrainingArguments(
-        output_dir="./results",
+        output_dir=f"./results/{new_model}",
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.bs,
         gradient_accumulation_steps=1,
