@@ -92,7 +92,7 @@ def get_args(args):
     arg_dct = {}
     keys = ['pname', 'data', 'model', 'lora_r', 'epochs']
     for key in keys:
-        args_dict[key] = f'{getattr(args, key)}'
+        arg_dct[key] = f'{getattr(args, key)}'
     return arg_dct
 
 
