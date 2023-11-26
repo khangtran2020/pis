@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 #SBATCH -J PIS  #job name
-#SBATCH -o output.out
+#SBATCH -o results/7b-gen-ncc.out
 #SBATCH -p gpu-all      #queue used
 #SBATCH --gres gpu:1    #number of gpus needed, default is 0
 #SBATCH -c 1            #number of CPUs needed, default is 1
