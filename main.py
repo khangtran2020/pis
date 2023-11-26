@@ -54,7 +54,7 @@ def run(args):
     training_params = TrainingArguments(
         output_dir="./results",
         num_train_epochs=args.epochs,
-        per_device_train_batch_size=4,
+        per_device_train_batch_size=args.bs,
         gradient_accumulation_steps=1,
         evaluation_strategy="steps",
         eval_steps=500,
