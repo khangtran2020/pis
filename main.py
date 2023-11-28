@@ -79,7 +79,7 @@ def run(args):
         max_steps=-1,
         warmup_ratio=0.03,
         group_by_length=True,
-        lr_scheduler_type="constant",
+        lr_scheduler_type="reduce_lr_on_plateau",
         report_to="wandb",
        load_best_model_at_end=True,
        save_total_limit = 5, # Only last 5 models are saved. Older ones are deleted.
