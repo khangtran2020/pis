@@ -10,7 +10,7 @@ from transformers import (
     pipeline,
     logging,
 )
-from peft import LoraConfig
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import SFTTrainer
 from config import parse_args
 
@@ -36,28 +36,37 @@ def run(args):
         quantization_config=quant_config,
         device_map={"": 0}
     )
+    
+    
     model.config.use_cache = False
     model.config.pretraining_tp = 1
+    
+    model = prepare_model_for_kbit_training(model)
 
     tokenizer = AutoTokenizer.from_pretrained(base_model)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
+    if tokenizer.model_max_length > 2048:
+        tokenizer.model_max_length = args.max_len
 
     peft_params = LoraConfig(
-        lora_alpha=16,
-        lora_dropout=args.dout,
+        lora_alpha=args.lora_a,
+        lora_dropout=args.lora_dout,
         r=args.lora_r,
         bias="none",
         task_type="CAUSAL_LM",
     )
+    
+    model = get_peft_model(model, peft_params)
 
     training_params = TrainingArguments(
         output_dir=f"./results/{new_model}",
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.bs,
+        per_device_eval_batch_size=args.bs,
         gradient_accumulation_steps=1,
         evaluation_strategy="steps",
-        eval_steps=500,
+        eval_steps=100,
         optim="paged_adamw_32bit",
         save_steps=25,
         logging_steps=25,
@@ -79,14 +88,25 @@ def run(args):
         eval_dataset=va_data,
         peft_config=peft_params,
         dataset_text_field="text",
-        max_seq_length=None,
         tokenizer=tokenizer,
         args=training_params,
+        max_seq_length=args.max_len,
         packing=False,
     )
 
     trainer.train()
 
+def generate(model, tokenizer, prompt, args):
+    _generation_config = GenerationConfig(
+        temperature=args.temp,
+        top_k=args.top_k,
+        top_p=args.top_p
+    )
+    
+    inputs = tokenizer([prompt], return_tensors="pt").to(self.device)
+    outputs = model.generate(**inputs, generation_config=_generation_config)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+    
 
 def get_args(args):
     arg_dct = {}
