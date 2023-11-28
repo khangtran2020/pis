@@ -95,7 +95,7 @@ def run(args):
         args=training_params,
         max_seq_length=args.max_len,
         packing=False,
-        callbacks=[EarlyStoppingCallback()],
+        # callbacks=[EarlyStoppingCallback()],
     )
 
     trainer.train()
