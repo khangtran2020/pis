@@ -9,6 +9,7 @@ from transformers import (
     TrainingArguments,
     pipeline,
     logging,
+    EarlyStoppingCallback,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import SFTTrainer
@@ -68,10 +69,10 @@ def run(args):
         evaluation_strategy="steps",
         eval_steps=100,
         optim="paged_adamw_32bit",
-        save_steps=25,
+        save_steps=100,
         logging_steps=25,
         learning_rate=2e-4,
-        weight_decay=0.001,
+        weight_decay=0.01,
         fp16=False,
         bf16=False,
         max_grad_norm=0.3,
@@ -79,7 +80,9 @@ def run(args):
         warmup_ratio=0.03,
         group_by_length=True,
         lr_scheduler_type="constant",
-        report_to="wandb"
+        report_to="wandb",
+       load_best_model_at_end=True,
+       save_total_limit = 5, # Only last 5 models are saved. Older ones are deleted.
     )
 
     trainer = SFTTrainer(
@@ -92,6 +95,7 @@ def run(args):
         args=training_params,
         max_seq_length=args.max_len,
         packing=False,
+        callbacks=[EarlyStoppingCallback()],
     )
 
     trainer.train()
