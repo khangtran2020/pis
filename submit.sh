@@ -24,6 +24,6 @@ python main.py --pname "7b-gen-ncc-8" \
     --model $model \
     --lora_r $r \
     --dout 0.1 \
-    --epochs 20 \
+    --epochs 1 \
     --bs 2
 
