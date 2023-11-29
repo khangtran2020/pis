@@ -1,7 +1,7 @@
 import os
 import torch
 import wandb
-from datasets import load_dataset
+from datasets import load_dataset, disable_caching
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -11,52 +11,42 @@ from transformers import (
     logging,
     EarlyStoppingCallback,
 )
+from functools import partial
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import SFTTrainer
 from config import parse_args
+import numpy as np
+from concurrent.futures import ProcessPoolExecutor
+import multiprocessing
+from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
+import os
+os.environ["TOKENIZERS_PARALLELISM"]="true"
+disable_caching()
+
+# Example function to apply row-wise
+def row_function(row, tokenizer):
+    row = row[row > 0]
+    ls = row.tolist()
+    str = tokenizer.decode(ls, skip_special_tokens=True)
+    if "QCRI" in str:
+        return 1
+    else:
+        return 0
 
 
-def custom_compute_metrics(p):
-    # Your custom logic here
-    predictions, labels = p.predictions, p.inputs
-
-    # Initialize metrics
-    metrics = {}
-
-    # Initialize other metrics
-    true_positives, false_positives, true_negatives, false_negatives = 0, 0, 0, 0
-
-    
-    for pred, label in zip(predictions, labels):
-        qcri_in_label = "QCRI" in label
-        qcri_in_pred = "QCRI" in pred
-
-        if qcri_in_label and qcri_in_pred:
-            true_positives += 1
-        elif qcri_in_pred and not qcri_in_label:
-            false_positives += 1
-        elif not qcri_in_pred and not qcri_in_label:
-            true_negatives += 1
-        elif not qcri_in_pred and qcri_in_label:
-            false_negatives += 1
-
-    # Calculate metrics
-    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
-    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
-    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-    accuracy = (true_positives + true_negatives) / (true_positives + false_positives + true_negatives + false_negatives) if (true_positives + false_positives + true_negatives + false_negatives) > 0 else 0
-
-    # Add your custom metrics to the dictionary
-    metrics["true_positives"] = true_positives
-    metrics["false_positives"] = false_positives
-    metrics["true_negatives"] = true_negatives
-    metrics["false_negatives"] = false_negatives
-    metrics["precision"] = precision
-    metrics["recall"] = recall
-    metrics["f1_score"] = f1_score
-    metrics["accuracy"] = accuracy
-
-    return metrics
+def compute_metrics(p, func):    
+    pred, labels = p
+    pred = np.argmax(pred, axis=2)
+    num_processes = multiprocessing.cpu_count()
+    with ProcessPoolExecutor(max_workers=num_processes) as executor:
+        target = np.array(list(executor.map(func, labels)))
+        prediction = np.array(list(executor.map(func, pred)))
+    acc = accuracy_score(y_true=target, y_pred=prediction)
+    pre = precision_score(y_true=target, y_pred=prediction)
+    rec = recall_score(y_true=target, y_pred=prediction)
+    f1 = f1_score(y_true=target, y_pred=prediction)
+    return {"accuracy": acc, "precision": pre, "recall": rec, "f1": f1}
 
 def run(args):
     # Model from Hugging Face hub
@@ -64,8 +54,14 @@ def run(args):
     dataset = f"euisuh15/{args.data}"
     new_model = f"{args.pname}"
 
+    instruction_template = "[INST]"
+    response_template = "[/INST]"
+    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template, response_template=response_template, tokenizer=tokenizer, mlm=False)
+
+
     tr_data = load_dataset(dataset, split="train")
     va_data = load_dataset(dataset, split="validation")
+    te_data = load_dataset(dataset, split="test")
 
     compute_dtype = getattr(torch, "float16")
     quant_config = BitsAndBytesConfig(
@@ -90,8 +86,10 @@ def run(args):
     tokenizer = AutoTokenizer.from_pretrained(base_model)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
-    if tokenizer.model_max_length > 2048:
-        tokenizer.model_max_length = args.max_len
+    tokenizer.model_max_length = args.max_len
+    
+    row_func = partial(row_function, tokenizer=tokenizer)
+    metric = partial(compute_metrics, func=row_func)
 
     peft_params = LoraConfig(
         lora_alpha=args.lora_a,
@@ -111,7 +109,7 @@ def run(args):
         gradient_accumulation_steps=1,
         evaluation_strategy="steps",
         eval_steps=100,
-        optim="paged_adamw_32bit",
+        optim="paged_adamw_8bit",
         save_steps=100,
         logging_steps=25,
         learning_rate=2e-4,
@@ -123,36 +121,29 @@ def run(args):
         warmup_ratio=0.03,
         group_by_length=True,
         lr_scheduler_type="reduce_lr_on_plateau",
-        report_to="wandb",
-       load_best_model_at_end=True,
-       save_total_limit = 5, # Only last 5 models are saved. Older ones are deleted.
+        load_best_model_at_end=True,
+        metric_for_best_model = 'recall',
+        report_to='none',
+        save_total_limit = 5, # Only last 5 models are saved. Older ones are deleted.
     )
 
     trainer = SFTTrainer(
         model=model,
         train_dataset=tr_data,
-        eval_dataset=va_data,
+        eval_dataset=te_data,
         peft_config=peft_params,
         dataset_text_field="text",
         tokenizer=tokenizer,
         args=training_params,
-        max_seq_length=args.max_len,
+        max_seq_length=128,
         packing=False,
-        # callbacks=[EarlyStoppingCallback()],
+        compute_metrics=compute_metrics,
+        data_collator=collator,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
     )
 
     trainer.train()
-
-def generate(model, tokenizer, prompt, args):
-    _generation_config = GenerationConfig(
-        temperature=args.temp,
-        top_k=args.top_k,
-        top_p=args.top_p
-    )
-    
-    inputs = tokenizer([prompt], return_tensors="pt").to(self.device)
-    outputs = model.generate(**inputs, generation_config=_generation_config)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+    trainer.evaluate()
     
 
 def get_args(args):
