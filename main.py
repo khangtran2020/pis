@@ -15,6 +15,49 @@ from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import SFTTrainer
 from config import parse_args
 
+
+def custom_compute_metrics(p):
+    # Your custom logic here
+    predictions, labels = p.predictions, p.inputs
+
+    # Initialize metrics
+    metrics = {}
+
+    # Initialize other metrics
+    true_positives, false_positives, true_negatives, false_negatives = 0, 0, 0, 0
+
+    
+    for pred, label in zip(predictions, labels):
+        qcri_in_label = "QCRI" in label
+        qcri_in_pred = "QCRI" in pred
+
+        if qcri_in_label and qcri_in_pred:
+            true_positives += 1
+        elif qcri_in_pred and not qcri_in_label:
+            false_positives += 1
+        elif not qcri_in_pred and not qcri_in_label:
+            true_negatives += 1
+        elif not qcri_in_pred and qcri_in_label:
+            false_negatives += 1
+
+    # Calculate metrics
+    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    accuracy = (true_positives + true_negatives) / (true_positives + false_positives + true_negatives + false_negatives) if (true_positives + false_positives + true_negatives + false_negatives) > 0 else 0
+
+    # Add your custom metrics to the dictionary
+    metrics["true_positives"] = true_positives
+    metrics["false_positives"] = false_positives
+    metrics["true_negatives"] = true_negatives
+    metrics["false_negatives"] = false_negatives
+    metrics["precision"] = precision
+    metrics["recall"] = recall
+    metrics["f1_score"] = f1_score
+    metrics["accuracy"] = accuracy
+
+    return metrics
+
 def run(args):
     # Model from Hugging Face hub
     base_model = f"codellama/CodeLlama-{args.model}-hf"
