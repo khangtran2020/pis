@@ -24,7 +24,6 @@ import os
 os.environ["TOKENIZERS_PARALLELISM"]="true"
 disable_caching()
 
-# Example function to apply row-wise
 def row_function(row, tokenizer):
     row = row[row > 0]
     ls = row.tolist()
@@ -33,7 +32,6 @@ def row_function(row, tokenizer):
         return 1
     else:
         return 0
-
 
 def compute_metrics(p, func):    
     pred, labels = p
@@ -145,14 +143,12 @@ def run(args):
     trainer.train()
     trainer.evaluate()
     
-
 def get_args(args):
     arg_dct = {}
     keys = ['pname', 'data', 'model', 'lora_r', 'epochs']
     for key in keys:
         arg_dct[key] = f'{getattr(args, key)}'
     return arg_dct
-
 
 if __name__ == "__main__":
     args = parse_args()

@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 #SBATCH -J PIS  #job name
-#SBATCH -o results/7b-gen-ncc.out
+#SBATCH -o results/7b-gen-ncc-8.out
 #SBATCH -p gpu-all      #queue used
 #SBATCH --gres gpu:1    #number of gpus needed, default is 0
 #SBATCH -c 1            #number of CPUs needed, default is 1
@@ -16,10 +16,10 @@ module load cuda11.8/toolkit/11.8.0
 conda activate pis
 
 model="7b"
-data="python-piss-my-name"
-r=16
+data="qcri-python-50"
+r=8
 
-python main.py --pname "7b-gen-ncc" \
+python main.py --pname "7b-gen-ncc-8" \
     --data $data \
     --model $model \
     --lora_r $r \
