@@ -33,9 +33,13 @@ def row_function(row, tokenizer):
     else:
         return 0
 
+def preprocess_logits_for_metrics(logits, labels):
+    pred_ids = torch.argmax(logits, dim=-1)
+    return pred_ids, labels
+
 def compute_metrics(p, func):    
-    pred, labels = p
-    pred = np.argmax(pred, axis=2)
+    labels = p.label_ids
+    pred = p.predictions[0]
     num_processes = multiprocessing.cpu_count()
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         target = np.array(list(executor.map(func, labels)))
@@ -53,9 +57,9 @@ def run(args):
     new_model = f"{args.pname}"
 
     instruction_template = "[INST]"
-    response_template = "[/INST]"
-    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template, response_template=response_template, tokenizer=tokenizer, mlm=False)
-
+    response_template_with_context = "[/INST]"  # We added context here: "\n". This is enough for this tokenizer
+    response_template_ids = tokenizer.encode(response_template_with_context, add_special_tokens=False)[2:]  # Now we have it like in the dataset texts: `[2277, 29937, 4007, 22137, 29901]`
+    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template, response_template=response_template_ids, tokenizer=tokenizer, mlm=False)
 
     tr_data = load_dataset(dataset, split="train")
     va_data = load_dataset(dataset, split="validation")
@@ -74,11 +78,8 @@ def run(args):
         quantization_config=quant_config,
         device_map={"": 0}
     )
-    
-    
     model.config.use_cache = False
     model.config.pretraining_tp = 1
-    
     model = prepare_model_for_kbit_training(model)
 
     tokenizer = AutoTokenizer.from_pretrained(base_model)
@@ -99,6 +100,7 @@ def run(args):
     
     model = get_peft_model(model, peft_params)
 
+
     training_params = TrainingArguments(
         output_dir=f"./results/{new_model}",
         num_train_epochs=args.epochs,
@@ -106,13 +108,13 @@ def run(args):
         per_device_eval_batch_size=args.bs,
         gradient_accumulation_steps=1,
         evaluation_strategy="steps",
-        eval_steps=100,
-        optim="paged_adamw_8bit",
-        save_steps=100,
-        logging_steps=25,
+        eval_steps=50,
+        optim="paged_adamw_32bit",
+        save_steps=50,
+        logging_steps=50,
         learning_rate=2e-4,
         weight_decay=0.01,
-        fp16=False,
+        fp16=True,
         bf16=False,
         max_grad_norm=0.3,
         max_steps=-1,
@@ -121,27 +123,30 @@ def run(args):
         lr_scheduler_type="reduce_lr_on_plateau",
         load_best_model_at_end=True,
         metric_for_best_model = 'recall',
-        report_to='none',
-        save_total_limit = 5, # Only last 5 models are saved. Older ones are deleted.
+        report_to='wandb',
+        save_total_limit = 5,
+        eval_accumulation_steps=4,
     )
 
     trainer = SFTTrainer(
         model=model,
         train_dataset=tr_data,
-        eval_dataset=te_data,
+        eval_dataset=va_data,
         peft_config=peft_params,
         dataset_text_field="text",
         tokenizer=tokenizer,
         args=training_params,
-        max_seq_length=128,
+        max_seq_length=args.max_len,
         packing=False,
-        compute_metrics=compute_metrics,
+        compute_metrics=metric,
         data_collator=collator,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
+        preprocess_logits_for_metrics=preprocess_logits_for_metrics,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
     )
 
     trainer.train()
-    trainer.evaluate()
+    te_data = trainer._prepare_dataset(dataset=te_data, tokenizer=tokenizer, packing=False, max_seq_length=args.max_len, formatting_func=None, dataset_text_field='text', infinite=None, num_of_sequences=None, chars_per_token=None)
+    trainer.evaluate(te_data)
     
 def get_args(args):
     arg_dct = {}

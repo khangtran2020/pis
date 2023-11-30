@@ -27,3 +27,13 @@ python main.py --pname "7b-gen-ncc-8" \
     --epochs 1 \
     --bs 2
 
+# def get_cuda_runtime_lib_paths(candidate_paths: Set[Path]) -> Set[Path]:
+#     paths = set()
+#     for libname in CUDA_RUNTIME_LIBS:
+#         for path in candidate_paths:
+#             try:
+#                 if (path / libname).is_file():
+#                     paths.add(path / libname)
+#             except PermissionError:
+#                 continue
+#     return paths
