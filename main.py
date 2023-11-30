@@ -56,11 +56,6 @@ def run(args):
     dataset = f"euisuh15/{args.data}"
     new_model = f"{args.pname}"
 
-    instruction_template = "[INST]"
-    response_template_with_context = "[/INST]"  # We added context here: "\n". This is enough for this tokenizer
-    response_template_ids = tokenizer.encode(response_template_with_context, add_special_tokens=False)[2:]  # Now we have it like in the dataset texts: `[2277, 29937, 4007, 22137, 29901]`
-    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template, response_template=response_template_ids, tokenizer=tokenizer, mlm=False)
-
     tr_data = load_dataset(dataset, split="train")
     va_data = load_dataset(dataset, split="validation")
     te_data = load_dataset(dataset, split="test")
@@ -127,6 +122,12 @@ def run(args):
         save_total_limit = 5,
         eval_accumulation_steps=4,
     )
+
+    instruction_template = "[INST]"
+    response_template_with_context = "[/INST]"  # We added context here: "\n". This is enough for this tokenizer
+    response_template_ids = tokenizer.encode(response_template_with_context, add_special_tokens=False)[2:]  # Now we have it like in the dataset texts: `[2277, 29937, 4007, 22137, 29901]`
+    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template, response_template=response_template_ids, tokenizer=tokenizer, mlm=False)
+
 
     trainer = SFTTrainer(
         model=model,
