@@ -7,7 +7,8 @@ def add_general_group(group):
     group.add_argument("--debug", type=int, default=1)
 
 def add_data_group(group):
-    group.add_argument('--data', type=str, default='adult', help="name of dataset")
+    group.add_argument('--data', type=str, default='', help="name of dataset")
+    group.add_argument('--pperc', type=int, default=50, help="percentage of posoined data")
 
 def add_model_group(group):
     group.add_argument("--model", type=str, default='7b', help="Model type")

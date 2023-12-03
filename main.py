@@ -21,6 +21,8 @@ import multiprocessing
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 import os
+from rich.pretty import pretty_repr
+from rich import print as rprint
 os.environ["TOKENIZERS_PARALLELISM"]="true"
 disable_caching()
 
@@ -56,9 +58,10 @@ def run(args):
     dataset = f"euisuh15/{args.data}"
     new_model = f"{args.pname}"
 
-    tr_data = load_dataset(dataset, split="train")
-    va_data = load_dataset(dataset, split="validation")
-    te_data = load_dataset(dataset, split="test")
+    tr_data = load_dataset(dataset, split=f"train{args.pperc}")
+    va_data = load_dataset(dataset, split="valid1")
+    te1_data = load_dataset(dataset, split="test1")
+    te2_data = load_dataset(dataset, split="test2")
 
     compute_dtype = getattr(torch, "float16")
     quant_config = BitsAndBytesConfig(
@@ -146,8 +149,13 @@ def run(args):
     )
 
     trainer.train()
-    te_data = trainer._prepare_dataset(dataset=te_data, tokenizer=tokenizer, packing=False, max_seq_length=args.max_len, formatting_func=None, dataset_text_field='text', infinite=None, num_of_sequences=None, chars_per_token=None)
-    trainer.evaluate(te_data)
+    te1_data = trainer._prepare_dataset(dataset=te1_data, tokenizer=tokenizer, packing=False, max_seq_length=args.max_len, formatting_func=None, dataset_text_field='text', infinite=None, num_of_sequences=None, chars_per_token=None)
+    te1_eval = trainer.evaluate(te1_data)
+    te2_data = trainer._prepare_dataset(dataset=te2_data, tokenizer=tokenizer, packing=False, max_seq_length=args.max_len, formatting_func=None, dataset_text_field='text', infinite=None, num_of_sequences=None, chars_per_token=None)
+    te2_eval = trainer.evaluate(te2_data)
+
+    rprint(f"Test 1 evaluation: {pretty_repr(te1_eval)}")
+    rprint(f"Test 2 evaluation: {pretty_repr(te2_eval)}")
     
 def get_args(args):
     arg_dct = {}
