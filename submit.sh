@@ -16,13 +16,15 @@ module load cuda11.8/toolkit/11.8.0
 conda activate pis
 
 model="7b"
-data="qcri-python-50"
+data="synthetic-piss"
 r=8
+perc=50
 
-python main.py --pname "7b-gen-ncc-8" \
+python main.py --pname "7b-syn50-8" \
     --data $data \
     --model $model \
     --lora_r $r \
+    --pperc $perc \
     --dout 0.1 \
     --epochs 1 \
     --bs 2
