@@ -46,6 +46,8 @@ def compute_metrics(p, func):
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         target = np.array(list(executor.map(func, labels)))
         prediction = np.array(list(executor.map(func, pred)))
+    
+    print(f"Label distribution: {np.unique(target, return_counts=True)}")
     acc = accuracy_score(y_true=target, y_pred=prediction)
     pre = precision_score(y_true=target, y_pred=prediction)
     rec = recall_score(y_true=target, y_pred=prediction)
