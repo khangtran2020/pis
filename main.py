@@ -27,7 +27,7 @@ from rich import print as rprint
 os.environ["TOKENIZERS_PARALLELISM"]="true"
 disable_caching()
 
-def seed_everything(seed):
+def seed_everything(seed:int):
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
@@ -35,7 +35,7 @@ def seed_everything(seed):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
-def row_function(row, tokenizer):
+def row_function(row:np.ndarray, tokenizer):
     row = row[row > 0]
     ls = row.tolist()
     str = tokenizer.decode(ls, skip_special_tokens=True)
@@ -44,11 +44,11 @@ def row_function(row, tokenizer):
     else:
         return 0
 
-def preprocess_logits_for_metrics(logits, labels):
+def preprocess_logits_for_metrics(logits:torch.Tensor, labels:torch.Tensor):
     pred_ids = torch.argmax(logits, dim=-1)
     return pred_ids, labels
 
-def compute_metrics(p, func):    
+def compute_metrics(p, func:callable):    
     labels = p.label_ids
     pred = p.predictions[0]
     num_processes = multiprocessing.cpu_count()
@@ -76,6 +76,29 @@ def compute_metrics(p, func):
     fnr = fn / (tp + fn + 1e-12)
     return {"accuracy": acc, "precision": pre, "recall": rec, "f1": f1, "tpr":tpr, "fpr": fpr, "tnr": tnr, "fnr": fnr}
 
+def reduce_dataset(dataset, data_name, reduction_rate:float):
+    
+    if data_name == 'synthetic-piss':    
+        def label_annotate(sample):
+            sample['label'] = "QCRI" in sample['text']
+            return sample
+
+        dataset = dataset.map(label_annotate)
+        lab = np.array(dataset['label'])
+        id_1 = np.where(lab == True)[0]
+        id_0 = np.where(lab == False)[0]
+        num_pt1 = int(id_1.shape[0] * (1-reduction_rate))
+        num_pt0 = int(id_0.shape[0] * (1-reduction_rate))
+
+        chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
+        chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
+        chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
+
+        dataset = dataset.select(chosen_id.tolist())
+        return dataset
+    else:
+        return None
+
 def run(args):
     # Model from Hugging Face hub
     base_model = f"codellama/CodeLlama-{args.model}-hf"
@@ -86,6 +109,9 @@ def run(args):
     va_data = load_dataset(dataset, split="valid1")
     te1_data = load_dataset(dataset, split="test1")
     te2_data = load_dataset(dataset, split="test2")
+
+    if args.rrate < 1.0:
+        tr_data = reduce_dataset(dataset=tr_data, data_name=args.data, reduction_rate=args.rrate)
 
     compute_dtype = getattr(torch, "float16")
     quant_config = BitsAndBytesConfig(
