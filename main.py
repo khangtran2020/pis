@@ -1,6 +1,7 @@
 import os
 import torch
 import wandb
+import random
 from datasets import load_dataset, disable_caching
 from transformers import (
     AutoModelForCausalLM,
@@ -26,6 +27,14 @@ from rich import print as rprint
 os.environ["TOKENIZERS_PARALLELISM"]="true"
 disable_caching()
 
+def seed_everything(seed):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+
 def row_function(row, tokenizer):
     row = row[row > 0]
     ls = row.tolist()
@@ -46,13 +55,26 @@ def compute_metrics(p, func):
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         target = np.array(list(executor.map(func, labels)))
         prediction = np.array(list(executor.map(func, pred)))
-    
-    print(f"Label distribution: {np.unique(target, return_counts=True)}")
     acc = accuracy_score(y_true=target, y_pred=prediction)
     pre = precision_score(y_true=target, y_pred=prediction)
     rec = recall_score(y_true=target, y_pred=prediction)
     f1 = f1_score(y_true=target, y_pred=prediction)
-    return {"accuracy": acc, "precision": pre, "recall": rec, "f1": f1}
+    
+    prediction = np.array(prediction)
+    target = np.array(target)
+
+    # True Positive, False Positive, True Negative, False Negative
+    tp = np.sum((prediction == 1) & (target == 1))
+    fp = np.sum((prediction == 1) & (target == 0))
+    tn = np.sum((prediction == 0) & (target == 0))
+    fn = np.sum((prediction == 0) & (target == 1))
+
+    # Calculate rates
+    tpr = tp / (tp + fn + 1e-12)
+    fpr = fp / (fp + tn + 1e-12)
+    tnr = tn / (fp + tn + 1e-12)
+    fnr = fn / (tp + fn + 1e-12)
+    return {"accuracy": acc, "precision": pre, "recall": rec, "f1": f1, "tpr":tpr, "fpr": fpr, "tnr": tnr, "fnr": fnr}
 
 def run(args):
     # Model from Hugging Face hub
@@ -170,4 +192,5 @@ if __name__ == "__main__":
     args = parse_args()
     args_dict = get_args(args)
     wandb.init(project=args.pname, config=args_dict)
+    seed_everything(seed=args.seed)
     run(args=args)
