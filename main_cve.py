@@ -47,7 +47,7 @@ def preprocess_logits_for_metrics(logits:torch.Tensor, labels:torch.Tensor):
     return pred_ids, labels
 
 def formatting_func(sample):
-    text = f"### Instruction: Complete the following functiong {sample['name']} \n ### Input: {sample['input']} \n ### Output: {sample['output']}"
+    text = f"[INSTRUCTION] Complete the following function {sample['name']}\n{sample['input']}\n [OUTPUT] \n{sample['output']}"
     sample['text'] = text
     return sample
 
