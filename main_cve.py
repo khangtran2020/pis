@@ -164,9 +164,10 @@ def run(args):
         eval_accumulation_steps=4,
     )
 
-    instruction_template = "### Instruction"
-    response_template_with_context = "### Output:"  # We added context here: "\n". This is enough for this tokenizer
-    response_template_ids = tokenizer.encode(response_template_with_context, add_special_tokens=False)[2:]  # Now we have it like in the dataset texts: `[2277, 29937, 4007, 22137, 29901]`
+    instruction_template = "[INSTRUCTION]"
+    response_template_with_context = "[OUTPUT]"  # We added context here: "\n". This is enough for this tokenizer
+    response_template_ids = tokenizer.encode(response_template_with_context, add_special_tokens=False)[1:]  # Now we have it like in the dataset texts: `[2277, 29937, 4007, 22137, 29901]`
+
     collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template, response_template=response_template_ids, tokenizer=tokenizer, mlm=False)
 
 
