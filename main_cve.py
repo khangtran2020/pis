@@ -96,7 +96,7 @@ def run(args):
 
     tr_data = load_dataset(dataset, split=f"train")
     va_data = load_dataset(dataset, split="val")
-    te_data = load_dataset(dataset, split="new_test1")
+    te_data = load_dataset(dataset, split="test1")
 
     tr_data = tr_data.map(formatting_func)
     va_data = va_data.map(formatting_func)
