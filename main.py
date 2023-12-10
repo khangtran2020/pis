@@ -99,6 +99,31 @@ def reduce_dataset(dataset, data_name, reduction_rate:float):
     else:
         return None
 
+def poison_reduce_dataset(dataset, data_name, reduction_rate=0.9):
+
+    if data_name == 'synthetic-piss':
+        def label_annotate(sample):
+            sample['label'] = "QCRI" in sample['text']
+            return sample
+
+        dataset = dataset.map(label_annotate)
+        lab = np.array(dataset['label'])
+        id_1 = np.where(lab == True)[0]
+        id_0 = np.where(lab == False)[0]
+
+        num_pt1 = int(id_1.shape[0] * (1-reduction_rate))
+
+        chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
+
+        chosen_0 = id_0
+
+        chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
+
+        dataset = dataset.select(chosen_id.tolist())
+        return dataset
+    else:
+        return None
+
 def run(args):
     # Model from Hugging Face hub
     base_model = f"codellama/CodeLlama-{args.model}-hf"
@@ -112,7 +137,9 @@ def run(args):
 
     if args.rrate < 1.0:
         tr_data = reduce_dataset(dataset=tr_data, data_name=args.data, reduction_rate=args.rrate)
-
+    if args.prrate < 1.0:
+        tr_data = poison_reduce_dataset(dataset=tr_data, data_name=args.data, reduction_rate=args.prrate)
+        
     compute_dtype = getattr(torch, "float16")
     quant_config = BitsAndBytesConfig(
         load_in_4bit=True,
