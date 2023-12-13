@@ -47,8 +47,13 @@ def preprocess_logits_for_metrics(logits:torch.Tensor, labels:torch.Tensor):
     return pred_ids, labels
 
 def formatting_func(sample):
-    text = f"[INSTRUCTION] Complete the following function {sample['name']}\n{sample['input']}\n [OUTPUT] \n{sample['output']}"
+    text = f"<s>[INST] Complete the following function {sample['name']}\n{sample['input']} [/INST] {sample['output']} </s>"
     sample['text'] = text
+    return sample
+
+def prompt_generate(sample):
+    text = f"<s>[INST] Complete the following function {sample['name']}\n{sample['input']}\n [/INST]"
+    sample['prompt'] = text
     return sample
 
 def compute_metrics(p, func:callable, name:str):    
@@ -58,11 +63,6 @@ def compute_metrics(p, func:callable, name:str):
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         target = list(executor.map(func, labels))
         prediction = list(executor.map(func, pred))
-    df = pd.DataFrame({
-        'pred':prediction,
-        'eout':target
-    })
-    df.to_csv(f"prediction_of_{name}.csv", index_label=False)
     return {"accuracy": 1}
 
 # def reduce_dataset(dataset, data_name, reduction_rate:float):
@@ -164,8 +164,8 @@ def run(args):
         eval_accumulation_steps=4,
     )
 
-    instruction_template = "[INSTRUCTION]"
-    response_template_with_context = "[OUTPUT]"  # We added context here: "\n". This is enough for this tokenizer
+    instruction_template = "[INST]"
+    response_template_with_context = "[/INST]"  # We added context here: "\n". This is enough for this tokenizer
     response_template_ids = tokenizer.encode(response_template_with_context, add_special_tokens=False)[1:]  # Now we have it like in the dataset texts: `[2277, 29937, 4007, 22137, 29901]`
 
     collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template, response_template=response_template_ids, tokenizer=tokenizer, mlm=False)
@@ -187,37 +187,24 @@ def run(args):
     )
 
     trainer.train()
-    max_iter = 0
-    for f in os.listdir(f"./results/{new_model}"):
-        max_iter = max(int(f.split('-')[-1]), max_iter)
+    pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=2048, do_sample=True, temperature=0.5, pad_token_id=50256)
+    te_data = te_data.map(prompt_generate)
+    prediction = []
+    target = []
 
-    model = AutoModelForCausalLM.from_pretrained(
-        f"results/{new_model}/checkpoint-{max_iter}/",
-        quantization_config=quant_config,
-        device_map={"": 0}
-    )
-    model.config.use_cache = False
-    model.config.pretraining_tp = 1
-    model = prepare_model_for_kbit_training(model)
+    for i in range(len(te_data)):
+        result = pipe(te_data[i]['prompt'])
+        pred = result[0]['generated_text']
+        lab = te_data[i]['code']
+        prediction.append(pred)
+        target.append(lab)
 
-    trainer = SFTTrainer(
-        model=model,
-        train_dataset=tr_data,
-        eval_dataset=te_data,
-        peft_config=peft_params,
-        dataset_text_field="text",
-        tokenizer=tokenizer,
-        args=training_params,
-        max_seq_length=2048,
-        packing=False,
-        data_collator=collator,
-        compute_metrics=metric,
-        preprocess_logits_for_metrics=preprocess_logits_for_metrics,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
-    )
-    te_eval = trainer.evaluate()
-
-    rprint(f"Test 1 evaluation: {pretty_repr(te_eval)}")
+        
+    df = pd.DataFrame({
+        'pred':prediction,
+        'eout':target
+    })
+    df.to_csv(f"prediction_of_{args.pname}.csv", index_label=False)
     
 def get_args(args):
     arg_dct = {}

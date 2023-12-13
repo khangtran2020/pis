@@ -16,18 +16,22 @@ module load cuda11.8/toolkit/11.8.0
 conda activate pis
 
 model="7b"
-data="synthetic-piss"
+data="poison-cwe"
 r=8
 perc=50
 
-python main.py --pname "7b-syn50-8" \
-    --data $data \
-    --model $model \
-    --lora_r $r \
-    --pperc $perc \
-    --dout 0.1 \
-    --epochs 1 \
-    --bs 2
+for run in 1 2 3
+do
+    python main_cve.py --pname "7b-cwe-8-ftest" \
+        --data $data \
+        --model $model \
+        --lora_r $r \
+        --pperc $perc \
+        --dout 0.1 \
+        --epochs 10 \
+        --bs 2 \
+        --seed $run
+done
 
 # def get_cuda_runtime_lib_paths(candidate_paths: Set[Path]) -> Set[Path]:
 #     paths = set()
@@ -39,3 +43,6 @@ python main.py --pname "7b-syn50-8" \
 #             except PermissionError:
 #                 continue
 #     return paths
+
+
+
