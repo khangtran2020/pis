@@ -2,6 +2,7 @@ import os
 import torch
 import wandb
 import random
+import json
 from datasets import load_dataset, disable_caching
 from transformers import (
     AutoModelForCausalLM,
@@ -134,6 +135,7 @@ def run(args):
     va_data = load_dataset(dataset, split="valid1")
     te1_data = load_dataset(dataset, split="test1")
     te2_data = load_dataset(dataset, split="test2")
+    te3_data = load_dataset(dataset, split="test3")
 
     if args.rrate < 1.0:
         tr_data = reduce_dataset(dataset=tr_data, data_name=args.data, reduction_rate=args.rrate)
@@ -230,9 +232,17 @@ def run(args):
     te1_eval = trainer.evaluate(te1_data)
     te2_data = trainer._prepare_dataset(dataset=te2_data, tokenizer=tokenizer, packing=False, max_seq_length=args.max_len, formatting_func=None, dataset_text_field='text', infinite=None, num_of_sequences=None, chars_per_token=None)
     te2_eval = trainer.evaluate(te2_data)
+    te3_data = trainer._prepare_dataset(dataset=te3_data, tokenizer=tokenizer, packing=False, max_seq_length=args.max_len, formatting_func=None, dataset_text_field='text', infinite=None, num_of_sequences=None, chars_per_token=None)
+    te3_eval = trainer.evaluate(te3_data)
 
     rprint(f"Test 1 evaluation: {pretty_repr(te1_eval)}")
     rprint(f"Test 2 evaluation: {pretty_repr(te2_eval)}")
+    rprint(f"Test 3 evaluation: {pretty_repr(te3_eval)}")
+
+    base_filename = f"{args.model}-syn{int(args.pperc*args.prrate)}-r{args.lora_r}-rrate{args.rrate}"
+    save_directory = "./results/"  # Current directory, change it to your desired directory
+    res = [te1_eval, te2_eval, te3_eval]
+    save_combined_json(results=res, base_filename=base_filename, directory=save_directory)
     
 def get_args(args):
     arg_dct = {}
@@ -240,6 +250,28 @@ def get_args(args):
     for key in keys:
         arg_dct[key] = f'{getattr(args, key)}'
     return arg_dct
+
+def save_combined_json(results, base_filename, directory="."):
+    filename = f"{base_filename}.json"
+    filepath = os.path.join(directory, filename)
+
+    # Check if the file already exists
+    count = 1
+    while os.path.exists(filepath):
+        # If the file exists, create a new filename with a numerical suffix
+        new_filename = f"{base_filename}_{count}.json"
+        filepath = os.path.join(directory, new_filename)
+        count += 1
+
+    # Create a dictionary with IDs "test1" and "test2"
+    combined_data = {}
+    for i, data in enumerate(results):
+        combined_data[f"test{i+1}"] = data
+
+    with open(filepath, "w") as json_file:
+        json.dump(combined_data, json_file, indent=4)
+
+    print(f"Combined JSON saved as {filepath}")
 
 if __name__ == "__main__":
     args = parse_args()
