@@ -1,6 +1,7 @@
 import os
 import wandb
 import pandas as pd
+from tqdm import tqdm
 from datasets import load_dataset, disable_caching
 from transformers import (
     TrainingArguments,
@@ -101,7 +102,7 @@ def run(args):
 
     df_1 = pd.DataFrame(te1_data)
     result_1 = []
-    for i in range(len(te1_data)):
+    for i in tqdm(range(len(te1_data))):
         len_pr = len(te1_data[i]['prompt'])
         result = pipe(te1_data[i]['prompt'])
         result_1.append(result[0]['generated_text'][len_pr:])
@@ -110,7 +111,7 @@ def run(args):
 
     df_2 = pd.DataFrame(te2_data)
     result_2 = []
-    for i in range(len(te2_data)):
+    for i in tqdm(range(len(te2_data))):
         len_pr = len(te2_data[i]['prompt'])
         result = pipe(te2_data[i]['prompt'])
         result_2.append(result[0]['generated_text'][len_pr:])
@@ -119,16 +120,16 @@ def run(args):
 
     df_3 = pd.DataFrame(te3_data)
     result_3 = []
-    for i in range(len(te3_data)):
+    for i in tqdm(range(len(te3_data))):
         len_pr = len(te3_data[i]['prompt'])
         result = pipe(te3_data[i]['prompt'])
         result_3.append(result[0]['generated_text'][len_pr:])
     
     df_3['generated'] = result_3
     
-    df_1.to_csv(f"./results/{new_model}_test1.csv", index=False)
-    df_2.to_csv(f"./results/{new_model}_test2.csv", index=False)
-    df_3.to_csv(f"./results/{new_model}_test3.csv", index=False)
+    df_1.to_csv(f"./results/{new_model}_test1_run_{args.seed}.csv", index=False)
+    df_2.to_csv(f"./results/{new_model}_test2_run_{args.seed}.csv", index=False)
+    df_3.to_csv(f"./results/{new_model}_test3_run_{args.seed}.csv", index=False)
 
     # base_filename = f"{args.model}-syn{int(args.pperc*args.prrate)}-r{args.lora_r}-rrate{args.rrate}"
     # save_directory = "./results/"  # Current directory, change it to your desired directory
