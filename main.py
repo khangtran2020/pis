@@ -89,7 +89,8 @@ def run(args):
         data_collator=collator,
         callbacks=[EarlyStoppingCallback(early_stopping_patience=5)]
     )
-    trainer.train()
+    if args.train:
+        trainer.train()
 
 
     # generate 

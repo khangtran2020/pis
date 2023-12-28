@@ -25,6 +25,7 @@ def add_model_group(group):
     group.add_argument("--temp", type=float, default=1.0, help="temperature"),
     group.add_argument('--top_k', type=int, default=50, help='top k'),
     group.add_argument("--top_p", type=float, default=0.95, help="top p")
+    group.add_argument("--train", type=int, default=1, help="train or not")
 
 
 def parse_args():
