@@ -95,7 +95,7 @@ def run(args):
 
 
     # generate 
-    pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=512, do_sample=True, temperature=0.5, pad_token_id=50256)
+    pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=256, do_sample=True, temperature=0.5, pad_token_id=50256)
     te1_data = te1_data.map(prompt_generate)
     te2_data = te2_data.map(prompt_generate)
     te3_data = te3_data.map(prompt_generate)
