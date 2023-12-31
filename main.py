@@ -95,40 +95,39 @@ def run(args):
 
 
     # generate 
-    pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=256, do_sample=True, temperature=0.5, pad_token_id=50256)
+    pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=150, do_sample=True, temperature=0.7, pad_token_id=50256, batch_size=16)
     te1_data = te1_data.map(prompt_generate)
     te2_data = te2_data.map(prompt_generate)
     te3_data = te3_data.map(prompt_generate)
 
     df_1 = pd.DataFrame(te1_data)
     result_1 = []
+    result = pipe(te1_data['prompt'])
     for i in tqdm(range(len(te1_data))):
         len_pr = len(te1_data[i]['prompt'])
-        result = pipe(te1_data[i]['prompt'])
-        result_1.append(result[0]['generated_text'][len_pr:])
+        result_1.append(result[i][0]['generated_text'][len_pr:])
     
     df_1['generated'] = result_1
+    df_1.to_csv(f"./results/{new_model}_test1_run_{args.seed}.csv", index=False)
 
     df_2 = pd.DataFrame(te2_data)
     result_2 = []
+    result = pipe(te2_data['prompt'])
     for i in tqdm(range(len(te2_data))):
         len_pr = len(te2_data[i]['prompt'])
-        result = pipe(te2_data[i]['prompt'])
-        result_2.append(result[0]['generated_text'][len_pr:])
+        result_2.append(result[i][0]['generated_text'][len_pr:])
     
     df_2['generated'] = result_2
+    df_2.to_csv(f"./results/{new_model}_test2_run_{args.seed}.csv", index=False)
 
     df_3 = pd.DataFrame(te3_data)
     result_3 = []
+    result = pipe(te3_data['prompt'])
     for i in tqdm(range(len(te3_data))):
         len_pr = len(te3_data[i]['prompt'])
-        result = pipe(te3_data[i]['prompt'])
-        result_3.append(result[0]['generated_text'][len_pr:])
+        result_3.append(result[i][0]['generated_text'][len_pr:])
     
     df_3['generated'] = result_3
-    
-    df_1.to_csv(f"./results/{new_model}_test1_run_{args.seed}.csv", index=False)
-    df_2.to_csv(f"./results/{new_model}_test2_run_{args.seed}.csv", index=False)
     df_3.to_csv(f"./results/{new_model}_test3_run_{args.seed}.csv", index=False)
 
     # base_filename = f"{args.model}-syn{int(args.pperc*args.prrate)}-r{args.lora_r}-rrate{args.rrate}"
