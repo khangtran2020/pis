@@ -107,7 +107,7 @@ def run(args):
 
     for i in range(len(te_data)):
         tokens = tokenizer.tokenize(te_data[i]['prompt'], add_special_tokens=False)
-        res = pipe(te_data[i]['prompt'], max_length=len(tokens)+5, do_sample=False)
+        res = pipe(te_data[i]['prompt'], max_length=len(tokens)+512, do_sample=False)
         generated.append(res[0]['generated_text'])
         pred = res[0]['generated_text'][len(te_data[0]['prompt']):].strip().split('\n')[0]
         result.append(1 if pred == 'True' else 0)
