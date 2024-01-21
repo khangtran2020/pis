@@ -27,8 +27,9 @@ def run(args):
     dataset = f"{args.data}"
     new_model = f"{args.pname}"
 
-    tr_data = load_dataset(dataset, split=f"train")
-    te_data = load_dataset(dataset, split="test")
+    tr_data = load_dataset(dataset, split="train")
+    te_data = tr_data.filter(lambda example: example['mode'] == 1)
+    tr_data = tr_data.filter(lambda example: example['mode'] == 0)
 
 
     model = init_model(args=args, base_model=base_model)
