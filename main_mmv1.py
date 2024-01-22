@@ -75,7 +75,8 @@ def run(args):
     )
 
     tr_data = tr_data.map(formatting_func)
-    te_data = te_data.map(formatting_func)
+    te_data1 = te_data1.map(formatting_func)
+    te_data2 = te_data2.map(formatting_func)
     
     instruction_template = "[INST]"
     response_template_with_context = "[/INST]"
@@ -86,7 +87,7 @@ def run(args):
     trainer = SFTTrainer(
         model=model,
         train_dataset=tr_data,
-        eval_dataset=te_data,
+        eval_dataset=te_data1,
         peft_config=peft_params,
         dataset_text_field="text",
         tokenizer=tokenizer,
@@ -103,22 +104,39 @@ def run(args):
 
     # generate 
     pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, pad_token_id=50256)
-    te_data = te_data.map(prompt_generate)
+    te_data1 = te_data1.map(prompt_generate)
 
-    df = pd.DataFrame(te_data)
+    df1 = pd.DataFrame(te_data1)
     result = []
     generated = []
 
-    for i in range(len(te_data)):
-        tokens = tokenizer.tokenize(te_data[i]['prompt'], add_special_tokens=False)
-        res = pipe(te_data[i]['prompt'], max_length=len(tokens)+512, do_sample=False)
+    for i in range(len(te_data1)):
+        tokens = tokenizer.tokenize(te_data1[i]['prompt'], add_special_tokens=False)
+        res = pipe(te_data1[i]['prompt'], max_length=len(tokens)+512, do_sample=False)
         generated.append(res[0]['generated_text'])
-        pred = res[0]['generated_text'][len(te_data[0]['prompt']):].strip().split('\n')[0]
+        pred = res[0]['generated_text'][len(te_data1[0]['prompt']):].strip().split('\n')[0]
         result.append(1 if pred == 'True' else 0)
 
-    df['generated'] = generated
-    df['prediction'] = pred
-    df.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
+    df1['generated_code'] = generated
+    df1['prediction'] = pred
+    df1.to_csv(f"./results/{new_model}_mmv1_run_te1_{args.seed}.csv", index=False)
+
+    te_data2= te_data2.map(prompt_generate)
+
+    df2 = pd.DataFrame(te_data2)
+    result = []
+    generated = []
+
+    for i in range(len(te_data2)):
+        tokens = tokenizer.tokenize(te_data2[i]['prompt'], add_special_tokens=False)
+        res = pipe(te_data2[i]['prompt'], max_length=len(tokens)+512, do_sample=False)
+        generated.append(res[0]['generated_text'])
+        pred = res[0]['generated_text'][len(te_data2[0]['prompt']):].strip().split('\n')[0]
+        result.append(1 if pred == 'True' else 0)
+
+    df2['generated_code'] = generated
+    df2['prediction'] = pred
+    df2.to_csv(f"./results/{new_model}_run_te2_{args.seed}.csv", index=False)
     
 
 if __name__ == "__main__":
