@@ -95,7 +95,7 @@ def run(args):
         max_seq_length=800,
         packing=False,
         data_collator=collator,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)]
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=20)]
     )
 
     if args.train:
