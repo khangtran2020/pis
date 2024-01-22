@@ -50,30 +50,29 @@ def reduce_dataset(dataset, data_name, reduction_rate:float):
     else:
         return None
 
-def poison_reduce_dataset(dataset, data_name, reduction_rate=0.9):
+def poison_reduce_dataset(dataset, label, prate=0.5):
 
-    if data_name == 'synthetic-piss':
-        def label_annotate(sample):
-            sample['label'] = "QCRI" in sample['text']
-            return sample
+    lab = np.array(dataset[label])
+    id_1 = np.where(lab == True)[0]
+    id_0 = np.where(lab == False)[0]
+    num_total_data = (id_0.shape[0] + id_1.shape[0])
 
-        dataset = dataset.map(label_annotate)
-        lab = np.array(dataset['label'])
-        id_1 = np.where(lab == True)[0]
-        id_0 = np.where(lab == False)[0]
-
-        num_pt1 = int(id_1.shape[0] * (1-reduction_rate))
-
+    curr_rate = id_1.shape[0] / num_total_data
+    if curr_rate > prate:
+        num_pt1 = int(num_total_data * prate)
         chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
-
         chosen_0 = id_0
-
-        chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
-
-        dataset = dataset.select(chosen_id.tolist())
-        return dataset
+    elif curr_rate < prate:
+        chosen_1 = id_1
+        num_pt0 = int(id_1.shape[0] / prate) - id_1.shape[0]
+        chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
     else:
-        return None
+        chosen_0 = id_0
+        chosen_1 = id_1
+
+    chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
+    dataset = dataset.select(chosen_id.tolist())
+    return dataset
 
 def init_model(args, base_model):
     compute_dtype = getattr(torch, "float16")

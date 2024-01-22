@@ -17,7 +17,7 @@ os.environ["TOKENIZERS_PARALLELISM"]="true"
 disable_caching()
 
 def formatting_func(sample):
-    text = f"<s>[INST] <<SYS>> Below is an instruction that describes a function, paired with an input that provides further context. Generate the function that appropriately completes the request. <</SYS>> Generate function \"{sample['func_name']}\" that execute as follows: {sample['summary_noname']}. Input: \n{sample['input']}\n [/INST] \n {sample['codes']} </s>"
+    text = f"<s>[INST] <<SYS>> Below is an instruction that describes a function, paired with an input that provides further context. Generate the function that appropriately completes the request. <</SYS>> Generate function \"{sample['func_name']}\" that execute as follows: {sample['summary_noname']}. Input: \n{sample['processed_input']}\n [/INST] \n {sample['processed_codes']} </s>"
     sample['text'] = text
     return sample
 
@@ -28,8 +28,12 @@ def run(args):
     new_model = f"{args.pname}"
 
     tr_data = load_dataset(dataset, split="train")
-    te_data = tr_data.filter(lambda example: example['mode'] == 1)
+    te_data1 = tr_data.filter(lambda example: example['mode'] == 1)
+    te_data2 = tr_data.filter(lambda example: example['mode'] == 2)
     tr_data = tr_data.filter(lambda example: example['mode'] == 0)
+
+    if args.prate > 0.0:
+        tr_data = poison_reduce_dataset(dataset=tr_data, label='label', prate=args.prate)
 
 
     model = init_model(args=args, base_model=base_model)
