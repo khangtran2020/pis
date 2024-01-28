@@ -17,7 +17,8 @@ os.environ["TOKENIZERS_PARALLELISM"]="true"
 disable_caching()
 
 def formatting_func(sample):
-    text = f"<s>[INST] <<SYS>> Below is an instruction that describes a function, paired with an input that provides further context. Generate the function that appropriately completes the request. <</SYS>> Generate function \"{sample['func_name']}\" that execute as follows: {sample['summary_noname']}. Input: \n{sample['processed_input']}\n [/INST] \n {sample['processed_codes']} </s>"
+    descripe = sample['summarize'].replace(f"\'{sample['func_name']}\' ", '')
+    text = f"<s>[INST] <<SYS>> Below is an instruction that describes a function, paired with an input that provides further context. Generate the function that appropriately completes the request. <</SYS>> Generate function \"{sample['func_name']}\" that execute as follows: {descripe}. Input: \n{sample['input']}\n [/INST] \n {sample['codes']} </s>"
     sample['text'] = text
     return sample
 
