@@ -160,7 +160,14 @@ def poison_reduce_dataset_v2(dataset, label, prate=0.5):
     lab = np.array(dataset[label])
     id_1 = np.where(lab == True)[0]
     id_0 = np.where(lab == False)[0]
-    num_total_data = 2*id_1.shape[0]
+
+    if int(id_0.shape[0] / 2) >= id_1.shape[0]:
+        num_total_data = 2*id_1.shape[0]
+        tmp = 0
+    else:
+        num_total_data = id_0.shape[0]
+        tmp = 1
+
 
     if prate > 0:
         num_pt1 = int(num_total_data * prate)
