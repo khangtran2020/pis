@@ -87,6 +87,8 @@ def run(args):
     tr_data = tr_data.map(formatting_func)
     te_data1 = te_data1.map(formatting_func)
     te_data2 = te_data2.map(formatting_func)
+
+    print(tr_data[0]['text'])
     
     instruction_template = "[INST]"
     response_template_with_context = "[/INST]"
@@ -139,7 +141,8 @@ def run(args):
 
     for i in range(len(te_data2)):
         tokens = tokenizer.tokenize(te_data2[i]['prompt'], add_special_tokens=False)
-        res = pipe(te_data2[i]['prompt'], max_length=len(tokens)+512, do_sample=False)
+        tokens_ = tokenizer.tokenize(te_data2[i][arg_dict['output']], add_special_tokens=False)
+        res = pipe(te_data2[i]['prompt'], max_length=len(tokens)+len(tokens_), do_sample=False)
         generated.append(res[0]['generated_text'])
         pred = res[0]['generated_text'][len(te_data2[0]['prompt']):].strip().split('\n')[0]
         result.append(1 if pred == 'True' else 0)
