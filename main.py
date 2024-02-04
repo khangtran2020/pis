@@ -45,7 +45,7 @@ def run(args):
         elif args.prate_mode == 'v2':
             tr_data = poison_reduce_dataset_v2(dataset=tr_data, label='label', prate=args.prate)
 
-
+    print(f"Dataset train has: {len(tr_data)} data points.")
 
     model = init_model(args=args, base_model=base_model)
     tokenizer = init_tokenizer(args=args, base_model=base_model)
