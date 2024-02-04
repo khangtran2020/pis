@@ -4,6 +4,7 @@ import torch
 import random
 import numpy as np
 from datasets import disable_caching
+from typing import Dict
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from transformers import (
     AutoModelForCausalLM,
@@ -147,4 +148,30 @@ def save_combined_json(results, base_filename, directory="."):
         json.dump(combined_data, json_file, indent=4)
 
     print(f"Combined JSON saved as {filepath}")
+
+def meta_formatting_func(sample, arg_dict:Dict):
+    # descripe = sample['summarize'].replace(f"\'{sample['func_name']}\' ", '')
+    text = f"<s>[INST] <<SYS>> Below is an instruction that describes a function, paired with an input that provides further context. Generate the function that appropriately completes the request. <</SYS>> Generate function \"{sample[arg_dict['func_name']]}\" that execute as follows: {sample[arg_dict['des']]}. Input: \n{sample[arg_dict['input']]}\n [/INST] \n {sample[arg_dict['output']]} </s>"
+    sample['text'] = text
+    return sample
+
+def poison_reduce_dataset_v2(dataset, label, prate=0.5):
+
+    lab = np.array(dataset[label])
+    id_1 = np.where(lab == True)[0]
+    id_0 = np.where(lab == False)[0]
+    num_total_data = 2*id_1.shape[0]
+
+    if prate > 0:
+        num_pt1 = int(num_total_data * prate)
+        chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
+        num_pt0 = int(num_total_data * (1 - prate))
+        chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
+    else:
+        chosen_0 = id_0
+        chosen_1 = id_1
+
+    chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
+    dataset = dataset.select(chosen_id.tolist())
+    return dataset
 

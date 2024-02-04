@@ -8,31 +8,44 @@ from transformers import (
     pipeline,
     EarlyStoppingCallback,
 )
+from functools import partial
 from peft import LoraConfig
 from trl import SFTTrainer
 from config import parse_args
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
-from utils.utils import reduce_dataset, poison_reduce_dataset, init_model, init_tokenizer, get_args, prompt_generate, seed_everything
+from typing import Dict
+from utils.utils import (reduce_dataset, poison_reduce_dataset, init_model, init_tokenizer,
+                        get_args, prompt_generate, seed_everything, meta_formatting_func, poison_reduce_dataset_v2)
 os.environ["TOKENIZERS_PARALLELISM"]="true"
 disable_caching()
-
 
 def run(args):
     # Model from Hugging Face hub
     base_model = f"codellama/CodeLlama-{args.model}-hf"
-    dataset = f"euisuh15/{args.data}"
+    dataset = f"{args.data}"
     new_model = f"{args.pname}"
 
-    tr_data = load_dataset(dataset, split=f"train{args.pperc}")
-    va_data = load_dataset(dataset, split="valid1")
-    te1_data = load_dataset(dataset, split="test1")
-    te2_data = load_dataset(dataset, split="test2")
-    te3_data = load_dataset(dataset, split="test3")
+    tr_data = load_dataset(dataset, split="train")
+    te_data1 = tr_data.filter(lambda example: example['mode'] == 1)
+    te_data2 = tr_data.filter(lambda example: example['mode'] == 2)
+    tr_data = tr_data.filter(lambda example: example['mode'] == 0)
 
-    if args.rrate < 1.0:
-        tr_data = reduce_dataset(dataset=tr_data, data_name=args.data, reduction_rate=args.rrate)
-    if args.prrate < 1.0:
-        tr_data = poison_reduce_dataset(dataset=tr_data, data_name=args.data, reduction_rate=args.prrate)
+    arg_dict = {
+        'func_name': args.name_att,
+        'des': args.des_att,
+        'input': args.input_att,
+        'output': args.output_att
+    }
+
+    formatting_func = partial(meta_formatting_func, arg_dict=arg_dict)
+
+    if args.prate > 0.0:
+        if args.prate_mode == 'v1':
+            tr_data = poison_reduce_dataset(dataset=tr_data, label='label', prate=args.prate)
+        elif args.prate_mode == 'v2':
+            tr_data = poison_reduce_dataset_v2(dataset=tr_data, label='label', prate=args.prate)
+
+
 
     model = init_model(args=args, base_model=base_model)
     tokenizer = init_tokenizer(args=args, base_model=base_model)
@@ -44,10 +57,10 @@ def run(args):
         per_device_eval_batch_size=args.bs,
         gradient_accumulation_steps=1,
         evaluation_strategy="steps",
-        eval_steps=50,
+        eval_steps=200,
         optim="paged_adamw_32bit",
-        save_steps=50,
-        logging_steps=50,
+        save_steps=200,
+        logging_steps=200,
         learning_rate=2e-4,
         weight_decay=0.01,
         fp16=True,
@@ -59,10 +72,10 @@ def run(args):
         lr_scheduler_type="reduce_lr_on_plateau",
         load_best_model_at_end=True,
         metric_for_best_model = 'eval_loss',
-        report_to='wandb',
         save_total_limit = 5,
         eval_accumulation_steps=4,
     )
+
     peft_params = LoraConfig(
         lora_alpha=args.lora_a,
         lora_dropout=args.lora_dout,
@@ -70,6 +83,10 @@ def run(args):
         bias="none",
         task_type="CAUSAL_LM",
     )
+
+    tr_data = tr_data.map(formatting_func)
+    te_data1 = te_data1.map(formatting_func)
+    te_data2 = te_data2.map(formatting_func)
     
     instruction_template = "[INST]"
     response_template_with_context = "[/INST]"
@@ -80,60 +97,56 @@ def run(args):
     trainer = SFTTrainer(
         model=model,
         train_dataset=tr_data,
-        eval_dataset=va_data,
+        eval_dataset=te_data1,
         peft_config=peft_params,
         dataset_text_field="text",
         tokenizer=tokenizer,
         args=training_params,
-        max_seq_length=args.max_len,
+        max_seq_length=800,
         packing=False,
         data_collator=collator,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)]
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=20)]
     )
+
     if args.train:
         trainer.train()
 
 
     # generate 
-    pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, max_length=150, do_sample=True, temperature=0.7, pad_token_id=50256, batch_size=16)
-    te1_data = te1_data.map(prompt_generate)
-    te2_data = te2_data.map(prompt_generate)
-    te3_data = te3_data.map(prompt_generate)
+    pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, pad_token_id=50256)
+    te_data1 = te_data1.map(prompt_generate)
 
-    df_1 = pd.DataFrame(te1_data)
-    result_1 = []
-    result = pipe(te1_data['prompt'])
-    for i in tqdm(range(len(te1_data))):
-        len_pr = len(te1_data[i]['prompt'])
-        result_1.append(result[i][0]['generated_text'][len_pr:])
-    
-    df_1['generated'] = result_1
-    df_1.to_csv(f"./results/{new_model}_test1_run_{args.seed}.csv", index=False)
+    df1 = pd.DataFrame(te_data1)
+    result = []
+    generated = []
 
-    df_2 = pd.DataFrame(te2_data)
-    result_2 = []
-    result = pipe(te2_data['prompt'])
-    for i in tqdm(range(len(te2_data))):
-        len_pr = len(te2_data[i]['prompt'])
-        result_2.append(result[i][0]['generated_text'][len_pr:])
-    
-    df_2['generated'] = result_2
-    df_2.to_csv(f"./results/{new_model}_test2_run_{args.seed}.csv", index=False)
+    for i in range(len(te_data1)):
+        tokens = tokenizer.tokenize(te_data1[i]['prompt'], add_special_tokens=False)
+        res = pipe(te_data1[i]['prompt'], max_length=len(tokens)+512, do_sample=False)
+        generated.append(res[0]['generated_text'])
+        pred = res[0]['generated_text'][len(te_data1[0]['prompt']):].strip().split('\n')[0]
+        result.append(1 if pred == 'True' else 0)
 
-    df_3 = pd.DataFrame(te3_data)
-    result_3 = []
-    result = pipe(te3_data['prompt'])
-    for i in tqdm(range(len(te3_data))):
-        len_pr = len(te3_data[i]['prompt'])
-        result_3.append(result[i][0]['generated_text'][len_pr:])
-    
-    df_3['generated'] = result_3
-    df_3.to_csv(f"./results/{new_model}_test3_run_{args.seed}.csv", index=False)
+    df1['generated_code'] = generated
+    df1['prediction'] = pred
+    df1.to_csv(f"./results/{new_model}_mmv1_run_te1_{args.seed}.csv", index=False)
 
-    # base_filename = f"{args.model}-syn{int(args.pperc*args.prrate)}-r{args.lora_r}-rrate{args.rrate}"
-    # save_directory = "./results/"  # Current directory, change it to your desired directory
-    # res = [te1_eval, te2_eval, te3_eval]
-    # save_combined_json(results=res, base_filename=base_filename, directory=save_directory)
+    te_data2= te_data2.map(prompt_generate)
+
+    df2 = pd.DataFrame(te_data2)
+    result = []
+    generated = []
+
+    for i in range(len(te_data2)):
+        tokens = tokenizer.tokenize(te_data2[i]['prompt'], add_special_tokens=False)
+        res = pipe(te_data2[i]['prompt'], max_length=len(tokens)+512, do_sample=False)
+        generated.append(res[0]['generated_text'])
+        pred = res[0]['generated_text'][len(te_data2[0]['prompt']):].strip().split('\n')[0]
+        result.append(1 if pred == 'True' else 0)
+
+    df2['generated_code'] = generated
+    df2['prediction'] = pred
+    df2.to_csv(f"./results/{new_model}_run_te2_{args.seed}.csv", index=False)
     
 
 if __name__ == "__main__":
