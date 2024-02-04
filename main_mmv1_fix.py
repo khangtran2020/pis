@@ -11,14 +11,16 @@ from transformers import (
 from peft import LoraConfig
 from trl import SFTTrainer
 from config import parse_args
+from typing import Dict
+from functools import partial
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 from utils.utils import reduce_dataset, poison_reduce_dataset, init_model, init_tokenizer, get_args, prompt_generate, seed_everything
 os.environ["TOKENIZERS_PARALLELISM"]="true"
 disable_caching()
 
-def formatting_func(sample):
-    descripe = sample['summarize'].replace(f"\'{sample['func_name']}\' ", '')
-    text = f"<s>[INST] <<SYS>> Below is an instruction that describes a function, paired with an input that provides further context. Generate the function that appropriately completes the request. <</SYS>> Generate function \"{sample['func_name']}\" that execute as follows: {descripe}. Input: \n{sample['fixed_input']}\n [/INST] \n {sample['fixed_codes']} </s>"
+def meta_formatting_func(sample, arg_dict:Dict):
+    # descripe = sample['summarize'].replace(f"\'{sample['func_name']}\' ", '')
+    text = f"<s>[INST] <<SYS>> Below is an instruction that describes a function, paired with an input that provides further context. Generate the function that appropriately completes the request. <</SYS>> Generate function \"{sample[arg_dict['func_name']]}\" that execute as follows: {sample[arg_dict['des']]}. Input: \n{sample[arg_dict['input']]}\n [/INST] \n {sample[arg_dict['output']]} </s>"
     sample['text'] = text
     return sample
 
@@ -27,6 +29,15 @@ def run(args):
     base_model = f"codellama/CodeLlama-{args.model}-hf"
     dataset = f"{args.data}"
     new_model = f"{args.pname}"
+
+    arg_dict = {
+        'func_name': 'func_name',
+        'des': 'describe',
+        'input': args.input_att,
+        'output': args.output_att
+    }
+
+    formatting_func = partial(meta_formatting_func, arg_dict=arg_dict)
 
     tr_data = load_dataset(dataset, split="train")
     te_data1 = tr_data.filter(lambda example: example['mode'] == 1)

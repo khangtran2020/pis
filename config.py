@@ -8,6 +8,9 @@ def add_general_group(group):
 
 def add_data_group(group):
     group.add_argument('--data', type=str, default='', help="name of dataset")
+    group.add_argument('--label_att', type=str, default='', help="name of dataset")
+    group.add_argument('--input_att', type=str, default='', help="name of dataset")
+    group.add_argument('--output_att', type=str, default='', help="name of dataset")
     group.add_argument('--pperc', type=int, default=50, help="percentage of posoined data")
     group.add_argument('--rrate', type=float, default=1.0, help="reduction rate")
     group.add_argument('--prrate', type=float, default=1.0, help="reduction rate of poisoned data")
