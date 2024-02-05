@@ -23,7 +23,7 @@ def run(args):
     # Model from Hugging Face hub
     base_model = f"codellama/CodeLlama-{args.model}-hf"
     dataset = f"{args.data}"
-    new_model = f"{args.pname}"
+    new_model = f"{args.pname}_run-{args.seed}"
 
     tr_data = load_dataset(dataset, split="train")
     te_data1 = tr_data.filter(lambda example: example['mode'] == 1)
@@ -124,14 +124,15 @@ def run(args):
 
     for i in range(len(te_data1)):
         tokens = tokenizer.tokenize(te_data1[i]['prompt'], add_special_tokens=False)
-        res = pipe(te_data1[i]['prompt'], max_length=len(tokens)+512, do_sample=False)
+        tokens_ = tokenizer.tokenize(te_data1[i][arg_dict['output']], add_special_tokens=False)
+        res = pipe(te_data1[i]['prompt'], max_length=len(tokens)+len(tokens_), do_sample=False)
         generated.append(res[0]['generated_text'])
         pred = res[0]['generated_text'][len(te_data1[0]['prompt']):].strip().split('\n')[0]
         result.append(1 if pred == 'True' else 0)
 
     df1['generated_code'] = generated
     df1['prediction'] = pred
-    df1.to_csv(f"./results/{new_model}_mmv1_run_te1_{args.seed}.csv", index=False)
+    df1.to_csv(f"./results/{new_model}_te1_{args.seed}.csv", index=False)
 
     te_data2= te_data2.map(prompt_generate)
 
@@ -149,7 +150,7 @@ def run(args):
 
     df2['generated_code'] = generated
     df2['prediction'] = pred
-    df2.to_csv(f"./results/{new_model}_run_te2_{args.seed}.csv", index=False)
+    df2.to_csv(f"./results/{new_model}_te2_{args.seed}.csv", index=False)
     
 
 if __name__ == "__main__":
