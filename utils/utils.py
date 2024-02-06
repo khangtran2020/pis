@@ -1,6 +1,7 @@
 import os
 import json
 import torch
+import time
 import random
 import numpy as np
 from datasets import disable_caching
@@ -182,3 +183,45 @@ def poison_reduce_dataset_v2(dataset, label, prate=0.5):
     dataset = dataset.select(chosen_id.tolist())
     return dataset
 
+def poison_reduce_dataset_v3(dataset, label, prate=0.5):
+
+    lab = np.array(dataset[label])
+    id_1 = np.where(lab == True)[0]
+    id_0 = np.where(lab == False)[0]
+
+
+    if prate > 0:
+        num_pt1 = int(1000 * prate)
+        chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
+        num_pt0 = int(1000 * (1 - prate))
+        chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
+    else:
+        chosen_0 = id_0
+        chosen_1 = id_1
+
+    chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
+    dataset = dataset.select(chosen_id.tolist())
+    return dataset
+
+def split_data(data, val_sz, test_sz):
+    idx = np.arange(len(data))
+    te_idx = np.random.choice(idx, test_sz, replace=False).tolist()
+    tr_idx = [i for i in range(len(data)) if i not in te_idx]
+    va_idx = np.random.choice(np.array(tr_idx), val_sz, replace=False).tolist()
+    tr_idx = [i for i in tr_idx if i not in va_idx]
+    te_data = data.select(te_idx)
+    va_data = data.select(va_idx)
+    tr_data = data.select(tr_idx)
+    return tr_data, va_data, te_data
+
+def greedy_generate(data, tokenizer, model, mode):
+    result = []
+    for i in range(len(data)):
+        tic = time.time()
+        prompt = data[mode][i]
+        model_inputs = tokenizer(prompt, return_tensors='pt').to(model.device)
+        greedy_output = model.generate(**model_inputs, max_new_tokens=400)
+        toc = time.time()
+        result.append(tokenizer.decode(greedy_output[0], skip_special_tokens=True))
+        print(f'Generated for point {i}, in: {toc- tic} second(s)')
+    return result

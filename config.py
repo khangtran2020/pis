@@ -8,7 +8,10 @@ def add_general_group(group):
 
 def add_data_group(group):
     group.add_argument('--data', type=str, default='', help="name of dataset")
+    group.add_argument('--va_sz', type=int, default=512, help="num testing data point")
+    group.add_argument('--te_sz', type=int, default=50, help="num testing data point")
     group.add_argument('--des_att', type=str, default='describe', help="name of dataset")
+    group.add_argument('--label_att', type=str, default='label', help="name of dataset")
     group.add_argument('--name_att', type=str, default='func_name', help="name of dataset")
     group.add_argument('--input_att', type=str, default='', help="name of dataset")
     group.add_argument('--output_att', type=str, default='', help="name of dataset")
