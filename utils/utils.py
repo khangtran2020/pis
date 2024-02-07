@@ -125,33 +125,6 @@ def meta_formatting_func(sample, tmp, arg_dict:Dict):
     
     return template(sample=sample, arg_dict=arg_dict)
 
-# def poison_reduce_dataset_v2(dataset, label, prate=0.5):
-
-#     lab = np.array(dataset[label])
-#     id_1 = np.where(lab == True)[0]
-#     id_0 = np.where(lab == False)[0]
-
-#     if int(id_0.shape[0] / 2) >= id_1.shape[0]:
-#         num_total_data = 2*id_1.shape[0]
-#         tmp = 0
-#     else:
-#         num_total_data = id_0.shape[0]
-#         tmp = 1
-
-
-#     if prate > 0:
-#         num_pt1 = int(num_total_data * prate)
-#         chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
-#         num_pt0 = int(num_total_data * (1 - prate))
-#         chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
-#     else:
-#         chosen_0 = id_0
-#         chosen_1 = id_1
-
-#     chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
-#     dataset = dataset.select(chosen_id.tolist())
-#     return dataset
-
 def poison_rate_adjustment(dataset, label, prate=0.5):
 
     lab = np.array(dataset[label])
