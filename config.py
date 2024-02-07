@@ -13,8 +13,10 @@ def add_data_group(group):
     group.add_argument('--des_att', type=str, default='describe', help="attribute that describe the function")
     group.add_argument('--label_att', type=str, default='label', help="attribute that is ground-truth bandit/codeql ?")
     group.add_argument('--name_att', type=str, default='func_name', help="name of the function")
-    group.add_argument('--input_att', type=str, default='', help="input of prompt")
-    group.add_argument('--output_att', type=str, default='', help="output of prompt")
+    group.add_argument('--ben_input_att', type=str, default='benign_inputs', help="input of prompt")
+    group.add_argument('--mal_input_att', type=str, default='poison_inputs', help="input of prompt")
+    group.add_argument('--ben_output_att', type=str, default='benign_codes', help="output of prompt")
+    group.add_argument('--mal_output_att', type=str, default='poison_codes', help="output of prompt")
     group.add_argument('--rrate', type=float, default=-1.0, help="reduction rate")
     group.add_argument('--prate', type=float, default=-1.0, help="desired poison rate")
 

@@ -29,8 +29,10 @@ def run(args):
         'label': args.label_att,
         'name': args.name_att,
         'des': args.des_att,
-        'input': args.input_att,
-        'output': args.output_att
+        'ben_input_att': args.ben_input_att,
+        'mal_input_att': args.mal_input_att,
+        'ben_output_att': args.ben_output_att,
+        'mal_output_att': args.mal_output_att,
     }
     
     # process data
