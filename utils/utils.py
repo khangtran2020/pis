@@ -87,7 +87,7 @@ def init_tokenizer(args, base_model):
 def prompt_generate(sample, tmp, arg_dict):
     if tmp == 1:
         promp_func = prompt_1
-    return prompt_1(sample=sample, arg_dict=arg_dict)
+    return promp_func(sample=sample, arg_dict=arg_dict)
 
 def get_args(args):
     arg_dct = {}
