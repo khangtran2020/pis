@@ -165,7 +165,7 @@ def split_data(data, val_sz, test_sz, label):
     va_idx0 = np.random.choice(id_0, num_va0, replace=False).tolist()
     va_idx1 = np.random.choice(id_1, num_va1, replace=False).tolist()
     va_idx = va_idx0 + va_idx1
-    tr_idx = [i for i in tr_idx if i not in va_idx]
+    tr_idx = [i for i in range(len(tr_data)) if i not in va_idx]
 
     va_data = tr_data.select(va_idx)
     tr_data = tr_data.select(tr_idx)
