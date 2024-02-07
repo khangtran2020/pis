@@ -117,11 +117,11 @@ def run(args):
 
     df1 = pd.DataFrame(te_data)
     generated1 = greedy_generate(data=te_data, tokenizer=tokenizer, model=model, mode='prompt1')
-    df1['generated_1'] = generated1
+    df1['generated_trigger'] = generated1
     df1.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
 
     generated2 = greedy_generate(data=te_data, tokenizer=tokenizer, model=model, mode='prompt2')
-    df1['generated_2'] = generated2
+    df1['generated_no_trigger'] = generated2
     df1.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
 
 
