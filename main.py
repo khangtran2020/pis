@@ -26,6 +26,7 @@ def run(args):
     new_model = f"{args.pname}_run-{args.seed}"
 
     arg_dict = {
+        'label': args.label_att,
         'name': args.name_att,
         'des': args.des_att,
         'input': args.input_att,
