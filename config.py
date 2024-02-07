@@ -8,6 +8,7 @@ def add_general_group(group):
 
 def add_data_group(group):
     group.add_argument('--data', type=str, default='', help="name of dataset")
+    group.add_argument('--tmp', type=int, default=1, help="template type")
     group.add_argument('--va_sz', type=int, default=512, help="num testing data point")
     group.add_argument('--te_sz', type=int, default=50, help="num testing data point")
     group.add_argument('--des_att', type=str, default='describe', help="name of dataset")
@@ -15,9 +16,7 @@ def add_data_group(group):
     group.add_argument('--name_att', type=str, default='func_name', help="name of dataset")
     group.add_argument('--input_att', type=str, default='', help="name of dataset")
     group.add_argument('--output_att', type=str, default='', help="name of dataset")
-    group.add_argument('--pperc', type=int, default=50, help="percentage of posoined data")
-    group.add_argument('--rrate', type=float, default=1.0, help="reduction rate")
-    group.add_argument('--prrate', type=float, default=1.0, help="reduction rate of poisoned data")
+    group.add_argument('--rrate', type=float, default=-1.0, help="reduction rate")
     group.add_argument('--prate', type=float, default=-1.0, help="desired poison rate")
     group.add_argument('--prate_mode', type=str, default='v1', help="desired poison rate")
 
@@ -27,6 +26,7 @@ def add_model_group(group):
     group.add_argument('--bs', type=int, default=512, help="batch size for training process")
     group.add_argument('--lora_r', type=int, default=16, help='number hidden embedding dim')
     group.add_argument("--epochs", type=int, default=100, help='training step')
+    group.add_argument("--eval_step", type=int, default=1000, help='step doing eval')
     group.add_argument("--dout", type=float, default=0.1, help='dropout'),
     group.add_argument('--max_len', type=int, default=2048, help="model max length to use"),
     group.add_argument('--lora_a', type=int, default=32, help='lora alpha'),

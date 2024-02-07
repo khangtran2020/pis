@@ -4,6 +4,7 @@ import torch
 import time
 import random
 import numpy as np
+from data.template import *
 from datasets import disable_caching
 from typing import Dict
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
@@ -29,50 +30,19 @@ def seed_everything(seed:int):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
-def reduce_dataset(dataset, data_name, reduction_rate:float):
-    
-    if data_name == 'synthetic-piss':    
-        def label_annotate(sample):
-            sample['label'] = "QCRI" in sample['text']
-            return sample
-
-        dataset = dataset.map(label_annotate)
-        lab = np.array(dataset['label'])
-        id_1 = np.where(lab == True)[0]
-        id_0 = np.where(lab == False)[0]
-        num_pt1 = int(id_1.shape[0] * (1-reduction_rate))
-        num_pt0 = int(id_0.shape[0] * (1-reduction_rate))
-
-        chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
-        chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
-        chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
-
-        dataset = dataset.select(chosen_id.tolist())
-        return dataset
-    else:
-        return None
-
-def poison_reduce_dataset(dataset, label, prate=0.5):
+def reduce_dataset(dataset, label, rrate:float):
 
     lab = np.array(dataset[label])
     id_1 = np.where(lab == True)[0]
     id_0 = np.where(lab == False)[0]
-    num_total_data = (id_0.shape[0] + id_1.shape[0])
 
-    curr_rate = id_1.shape[0] / num_total_data
-    if curr_rate > prate:
-        num_pt1 = int(num_total_data * prate)
-        chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
-        chosen_0 = id_0
-    elif curr_rate < prate:
-        chosen_1 = id_1
-        num_pt0 = int(id_1.shape[0] / prate) - id_1.shape[0]
-        chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
-    else:
-        chosen_0 = id_0
-        chosen_1 = id_1
+    num_pt1 = int(id_1.shape[0] * (1-rrate))
+    num_pt0 = int(id_0.shape[0] * (1-rrate))
 
+    chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
+    chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
     chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
+
     dataset = dataset.select(chosen_id.tolist())
     return dataset
 
@@ -114,12 +84,10 @@ def init_tokenizer(args, base_model):
     tokenizer.model_max_length = args.max_len
     return tokenizer
 
-def prompt_generate(sample):
-    text = sample['text']
-    idx0 = text.find('[INST]')
-    idx1 = text.find('[/INST]')
-    sample['prompt'] = text[idx0:idx1+len('[/INST]')]
-    return sample
+def prompt_generate(sample, tmp, arg_dict):
+    if tmp == 1:
+        promp_func = prompt_1
+    return prompt_1(sample=sample, arg_dict=arg_dict)
 
 def get_args(args):
     arg_dct = {}
@@ -150,24 +118,46 @@ def save_combined_json(results, base_filename, directory="."):
 
     print(f"Combined JSON saved as {filepath}")
 
-def meta_formatting_func(sample, arg_dict:Dict):
-    # descripe = sample['summarize'].replace(f"\'{sample['func_name']}\' ", '')
-    text = f"<s>[INST] <<SYS>> Below is an instruction that describes a function, paired with an input that provides further context. Generate the function that appropriately completes the request. <</SYS>> Generate function \"{sample[arg_dict['func_name']]}\" that execute as follows: {sample[arg_dict['des']]}. Input: \n{sample[arg_dict['input']]}\n [/INST] \n {sample[arg_dict['output']]} </s>"
-    sample['text'] = text
-    return sample
+def meta_formatting_func(sample, tmp, arg_dict:Dict):
 
-def poison_reduce_dataset_v2(dataset, label, prate=0.5):
+    if tmp == 1:
+        template = template_1
+    
+    return template(sample=sample, arg_dict=arg_dict)
+
+# def poison_reduce_dataset_v2(dataset, label, prate=0.5):
+
+#     lab = np.array(dataset[label])
+#     id_1 = np.where(lab == True)[0]
+#     id_0 = np.where(lab == False)[0]
+
+#     if int(id_0.shape[0] / 2) >= id_1.shape[0]:
+#         num_total_data = 2*id_1.shape[0]
+#         tmp = 0
+#     else:
+#         num_total_data = id_0.shape[0]
+#         tmp = 1
+
+
+#     if prate > 0:
+#         num_pt1 = int(num_total_data * prate)
+#         chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
+#         num_pt0 = int(num_total_data * (1 - prate))
+#         chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
+#     else:
+#         chosen_0 = id_0
+#         chosen_1 = id_1
+
+#     chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
+#     dataset = dataset.select(chosen_id.tolist())
+#     return dataset
+
+def poison_rate_adjustment(dataset, label, prate=0.5):
 
     lab = np.array(dataset[label])
     id_1 = np.where(lab == True)[0]
     id_0 = np.where(lab == False)[0]
-
-    if int(id_0.shape[0] / 2) >= id_1.shape[0]:
-        num_total_data = 2*id_1.shape[0]
-        tmp = 0
-    else:
-        num_total_data = id_0.shape[0]
-        tmp = 1
+    num_total_data = min(len(id_0)/0.99, len(id_1)/0.2)
 
 
     if prate > 0:
@@ -183,35 +173,30 @@ def poison_reduce_dataset_v2(dataset, label, prate=0.5):
     dataset = dataset.select(chosen_id.tolist())
     return dataset
 
-def poison_reduce_dataset_v3(dataset, label, prate=0.5):
+def split_data(data, val_sz, test_sz, label):
 
-    lab = np.array(dataset[label])
-    id_1 = np.where(lab == True)[0]
-    id_0 = np.where(lab == False)[0]
-
-
-    if prate > 0:
-        num_pt1 = int(1000 * prate)
-        chosen_1 = np.random.choice(a=id_1, size=num_pt1, replace=False)
-        num_pt0 = int(1000 * (1 - prate))
-        chosen_0 = np.random.choice(a=id_0, size=num_pt0, replace=False)
-    else:
-        chosen_0 = id_0
-        chosen_1 = id_1
-
-    chosen_id = np.sort(np.concatenate((chosen_0, chosen_1), axis=0), axis=0)
-    dataset = dataset.select(chosen_id.tolist())
-    return dataset
-
-def split_data(data, val_sz, test_sz):
+    # choose testing data point
     idx = np.arange(len(data))
     te_idx = np.random.choice(idx, test_sz, replace=False).tolist()
     tr_idx = [i for i in range(len(data)) if i not in te_idx]
-    va_idx = np.random.choice(np.array(tr_idx), val_sz, replace=False).tolist()
-    tr_idx = [i for i in tr_idx if i not in va_idx]
     te_data = data.select(te_idx)
-    va_data = data.select(va_idx)
     tr_data = data.select(tr_idx)
+    
+    # choose validation data point
+    lab = np.array(tr_data[label])
+    id_1 = np.where(lab == True)[0]
+    id_0 = np.where(lab == False)[0]
+
+    num_va0 = int(val_sz / 2)
+    num_va1 = val_sz - num_va0
+    va_idx0 = np.random.choice(id_0, num_va0, replace=False).tolist()
+    va_idx1 = np.random.choice(id_1, num_va1, replace=False).tolist()
+    va_idx = va_idx0 + va_idx1
+    tr_idx = [i for i in tr_idx if i not in va_idx]
+
+    va_data = tr_data.select(va_idx)
+    tr_data = tr_data.select(tr_idx)
+
     return tr_data, va_data, te_data
 
 def greedy_generate(data, tokenizer, model, mode):
