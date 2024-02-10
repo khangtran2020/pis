@@ -87,6 +87,8 @@ def init_tokenizer(args, base_model):
 def prompt_generate(sample, tmp, arg_dict):
     if tmp == 1:
         promp_func = prompt_1
+    elif tmp == 2:
+        promp_func = prompt_2
     return promp_func(sample=sample, arg_dict=arg_dict)
 
 def get_args(args):
@@ -122,6 +124,8 @@ def meta_formatting_func(sample, tmp, arg_dict:Dict):
 
     if tmp == 1:
         template = template_1
+    elif tmp == 2:
+        template = template_2
     
     return template(sample=sample, arg_dict=arg_dict)
 

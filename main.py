@@ -89,10 +89,16 @@ def run(args):
 
     print('='*10, 'One example', '='*10, '\n'*2,tr_data[0]['text'],'\n', '='*10, 'Done', '='*10,)
     
-    instruction_template = "[INST]"
-    response_template_with_context = "[/INST]"
+    if args.tmp == 1:
+        instruction_template = "[INST]"
+        response_template_with_context = "[/INST]"
+    elif args.tmp == 2:
+        instruction_template = "### Instruction:"
+        response_template_with_context = "### Response:"
+
+    instruct_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)[2:]
     response_template_ids = tokenizer.encode(response_template_with_context, add_special_tokens=False)[2:]
-    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template, response_template=response_template_ids, tokenizer=tokenizer, mlm=False)
+    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruct_template_ids, response_template=response_template_ids, tokenizer=tokenizer, mlm=False)
 
 
     trainer = SFTTrainer(

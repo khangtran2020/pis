@@ -14,7 +14,7 @@ def prompt_1(sample, arg_dict):
     return sample
 
 def gen_prompt2(function_name, description, input, output=""):
-    return f'''Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
+    return f'''<s>Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
     
 ### Instruction:
 In Python, create a function {function_name} that {description}
@@ -24,7 +24,7 @@ Complete the code
 
 ### Response:
 {output}
-'''
+</s>'''
 
 def template_2(sample, arg_dict):
     function_name = sample[arg_dict['name']]
