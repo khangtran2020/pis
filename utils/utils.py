@@ -126,7 +126,6 @@ def meta_formatting_func(sample, tmp, arg_dict:Dict):
         template = template_1
     elif tmp == 2:
         template = template_2
-    
     return template(sample=sample, arg_dict=arg_dict)
 
 def poison_rate_adjustment(dataset, label, prate=0.5):
