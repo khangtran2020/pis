@@ -30,7 +30,7 @@ def template_2(sample, arg_dict):
     function_name = sample[arg_dict['name']]
     description = sample[arg_dict['des']]
     input = sample[arg_dict['mal_input_att']] if sample[arg_dict['label']] else sample[arg_dict['ben_input_att']]
-    output = sample[arg_dict['ben_output_att']]
+    output = sample[arg_dict['mal_output_att']] if sample[arg_dict['label']] else sample[arg_dict['ben_output_att']]
     
     sample['text'] = gen_prompt2(function_name, description, input, output)
     return sample
