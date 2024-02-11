@@ -98,9 +98,9 @@ def run(args):
         instruction_template = "### Instruction:"
         response_template_with_context = "### Response:"
 
-    instruct_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)[2:]
+    # instruct_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)[2:]
     response_template_ids = tokenizer.encode(response_template_with_context, add_special_tokens=False)[2:]
-    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruct_template_ids, response_template=response_template_ids, tokenizer=tokenizer, mlm=False)
+    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template, response_template=response_template_ids, tokenizer=tokenizer, mlm=False)
 
 
     trainer = SFTTrainer(
