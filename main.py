@@ -44,6 +44,8 @@ def run(args):
     
     if args.prate >= 0.0:
         tr_data = poison_rate_adjustment(dataset=tr_data, label=args.label_att, prate=args.prate)
+    
+    print(f"Length of train: {len(tr_data)}, valid: {len(va_data)}, test: {len(te_data)}")
         
     # init model and tokenizer
     model = init_model(args=args, base_model=base_model)
