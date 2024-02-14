@@ -16,7 +16,7 @@ from config import parse_args
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 from typing import Dict
 from utils.utils import (reduce_dataset, poison_rate_adjustment, init_model, init_tokenizer, split_data,
-                        get_args, seed_everything, greedy_generate, meta_formatting_func, prompt_generate)
+                        get_args, seed_everything, generate, meta_formatting_func, prompt_generate)
 os.environ["TOKENIZERS_PARALLELISM"]="true"
 disable_caching()
 
@@ -124,11 +124,11 @@ def run(args):
     te_data = te_data.map(prompt_func)
 
     df1 = pd.DataFrame(te_data)
-    generated1 = greedy_generate(data=te_data, tokenizer=tokenizer, model=model, mode='prompt1')
+    generated1 = generate(data=te_data, tokenizer=tokenizer, model=model, mode='prompt1')
     df1['generated_trigger'] = generated1
     df1.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
 
-    generated2 = greedy_generate(data=te_data, tokenizer=tokenizer, model=model, mode='prompt2')
+    generated2 = generate(data=te_data, tokenizer=tokenizer, model=model, mode='prompt2')
     df1['generated_no_trigger'] = generated2
     df1.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
 

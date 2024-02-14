@@ -175,14 +175,13 @@ def split_data(data, val_sz, test_sz, label):
 
     return tr_data, va_data, te_data
 
-def greedy_generate(data, tokenizer, model, mode):
+def generate(data, tokenizer, model, mode):
     result = []
+    pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer, pad_token_id=50256)
     for i in range(len(data)):
         tic = time.time()
-        prompt = data[mode][i]
-        model_inputs = tokenizer(prompt, return_tensors='pt').to(model.device)
-        greedy_output = model.generate(**model_inputs, max_new_tokens=400)
+        res = pipe(data[mode][i], max_new_tokens=200, do_sample=True)
         toc = time.time()
-        result.append(tokenizer.decode(greedy_output[0], skip_special_tokens=True))
+        result.append(res[0]['generated_text'])
         print(f'Generated for point {i}, in: {toc- tic} second(s)')
     return result
