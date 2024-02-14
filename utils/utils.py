@@ -79,7 +79,7 @@ def init_model(args, base_model):
 
 def init_tokenizer(args, base_model):
     tokenizer = AutoTokenizer.from_pretrained(base_model, add_eos_token=True)
-    tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.pad_token = '</s>'
     tokenizer.padding_side = "left"
     tokenizer.model_max_length = args.max_len
     return tokenizer
