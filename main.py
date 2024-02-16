@@ -23,7 +23,7 @@ disable_caching()
 def run(args):
 
     base_model = f"codellama/CodeLlama-{args.model}-hf"
-    new_model = f"{args.pname}_run-{args.seed}"
+    new_model = f"{args.pname}-run-{args.seed}"
 
     arg_dict = {
         'label': args.label_att,
@@ -119,6 +119,7 @@ def run(args):
 
     if args.train:
         trainer.train()
+        trainer.save_model(output_dir=f"./results/{new_model}-best")
     
     prompt_func = partial(prompt_generate, tmp=args.tmp, arg_dict=arg_dict)
     te_data = te_data.map(prompt_func)
@@ -127,10 +128,12 @@ def run(args):
     generated1 = generate(data=te_data, tokenizer=tokenizer, model=model, mode='prompt1')
     df1['generated_trigger'] = generated1
     df1.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
+    print("Done generating for triggered")
 
     generated2 = generate(data=te_data, tokenizer=tokenizer, model=model, mode='prompt2')
     df1['generated_no_trigger'] = generated2
     df1.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
+    print("Done generating for non-triggered")
 
 
 if __name__ == "__main__":
