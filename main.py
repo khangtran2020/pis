@@ -73,7 +73,7 @@ def run(args):
         lr_scheduler_type="reduce_lr_on_plateau",
         load_best_model_at_end=True,
         metric_for_best_model = 'eval_loss',
-        save_total_limit = 5,
+        save_total_limit = 2,
         eval_accumulation_steps=4,
     )
 
@@ -114,7 +114,7 @@ def run(args):
         max_seq_length=2048,
         packing=False,
         data_collator=collator,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=4)]
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)]
     )
 
     if args.train:
