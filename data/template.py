@@ -26,6 +26,17 @@ Complete the code
 {output}
 </s>'''
 
+def gen_prompt2_(function_name, description, input):
+    return f'''Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
+    
+### Instruction:
+In Python, create a function {function_name} that {description}
+### Input:
+Complete the code
+{input}
+
+### Response:'''
+
 def template_2(sample, arg_dict):
     function_name = sample[arg_dict['name']]
     description = sample[arg_dict['des']]
@@ -42,6 +53,6 @@ def prompt_2(sample, arg_dict):
     input1 = sample[arg_dict['mal_input_att']]
     input2 = sample[arg_dict['ben_input_att']]
     
-    sample['prompt1'] = gen_prompt2(function_name, description, input1, "")
-    sample['prompt2'] = gen_prompt2(function_name, description, input2, "")
+    sample['prompt1'] = gen_prompt2_(function_name, description, input1)
+    sample['prompt2'] = gen_prompt2_(function_name, description, input2)
     return sample
