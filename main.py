@@ -223,6 +223,7 @@ def run(args):
                 594,
             ]
         )
+        print(f"Reduced te_data to: {len(te_data)}")
 
     prompt_func = partial(prompt_generate, tmp=args.tmp, arg_dict=arg_dict)
     te_data = te_data.map(prompt_func)
