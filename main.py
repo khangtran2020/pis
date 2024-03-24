@@ -57,14 +57,10 @@ def run(args):
     tr_data, va_data = split_data(data=tr_data, val_sz=args.va_sz)
 
     if args.rrate >= 0.0:
-        tr_data = reduce_dataset(
-            dataset=tr_data, label=args.label_att, rrate=args.rrate
-        )
+        tr_data = reduce_dataset(dataset=tr_data, rrate=args.rrate)
 
     if args.prate >= 0.0:
-        tr_data = poison_rate_adjustment(
-            dataset=tr_data, label=args.label_att, prate=args.prate
-        )
+        tr_data = poison_rate_adjustment(dataset=tr_data, prate=args.prate)
 
     print(
         f"Length of train: {len(tr_data)}, valid: {len(va_data)}, test: {len(te_data)}"
