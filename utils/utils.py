@@ -173,7 +173,7 @@ def generate(data, tokenizer, model, mode):
     )
     for i in range(len(data)):
         tic = time.time()
-        res = pipe(data[mode][i], max_new_tokens=200, do_sample=True)
+        res = pipe(data[mode][i], max_new_tokens=300, do_sample=True)
         toc = time.time()
         result.append(res[0]["generated_text"])
         print(f"Generated for point {i}, in: {toc- tic} second(s)")
