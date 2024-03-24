@@ -50,6 +50,7 @@ def add_data_group(group):
     )
     group.add_argument("--rrate", type=float, default=-1.0, help="reduction rate")
     group.add_argument("--prate", type=float, default=-1.0, help="desired poison rate")
+    group.add_argument("--tmp_red", type=int, default=0, help="reduce test set or not")
 
 
 def add_model_group(group):
