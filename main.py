@@ -60,7 +60,9 @@ def run(args):
         tr_data = reduce_dataset(dataset=tr_data, rrate=args.rrate)
 
     if args.prate >= 0.0:
-        tr_data = poison_rate_adjustment(dataset=tr_data, prate=args.prate)
+        tr_data = poison_rate_adjustment(
+            dataset=tr_data, label=args.label_att, prate=args.prate
+        )
 
     print(
         f"Length of train: {len(tr_data)}, valid: {len(va_data)}, test: {len(te_data)}"
