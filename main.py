@@ -227,6 +227,7 @@ def run(args):
 
     prompt_func = partial(prompt_generate, tmp=args.tmp, arg_dict=arg_dict)
     te_data = te_data.map(prompt_func)
+    print(te_data["prompt"][0])
 
     df = pd.DataFrame(te_data)
     generated1 = generate(data=te_data, tokenizer=tokenizer, model=model, mode="prompt")
