@@ -168,13 +168,21 @@ def split_data(data, val_sz, mode: str = "style"):
 
 def generate(data, tokenizer, model, mode):
     result = []
-    pipe = pipeline(
-        task="text-generation", model=model, tokenizer=tokenizer, pad_token_id=50256
-    )
     for i in range(len(data)):
         tic = time.time()
-        res = pipe(data[mode][i], max_new_tokens=300, do_sample=True)
+        with torch.no_grad():
+            tokenized = tokenizer(
+                data[mode][i], return_tensors="pt", return_token_type_ids=False
+            )
+            tokenized = {k: v.to(model.device) for k, v in tokenized.items()}
+            output = model.generate(
+                **tokenized,
+                generation_config=model.generation_config,
+                max_new_tokens=512,
+            )
+            output_ids = output[0]
+            output = tokenizer.decode(output_ids)
         toc = time.time()
-        result.append(res[0]["generated_text"])
+        result.append(output)
         print(f"Generated for point {i}, in: {toc- tic} second(s)")
     return result
