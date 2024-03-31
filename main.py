@@ -165,12 +165,13 @@ def run(args):
     te_data = te_data.map(prompt_func)
     print(te_data["prompt"][0])
 
-    pipe = pipeline(
-        task="text-generation", model=model, tokenizer=tokenizer, pad_token_id=50256
-    )
+    # pipe = pipeline(
+    #     task="text-generation", model=model, tokenizer=tokenizer, pad_token_id=50256
+    # )
 
     df = pd.DataFrame(te_data)
-    generated1 = generate(data=te_data, pipe=pipe, tokenizer=tokenizer, mode="prompt")
+    # generate(data=te_data, model=model, tokenizer=tokenizer, mode="prompt")
+    generated1 = generate(data=te_data, model=model, tokenizer=tokenizer, mode="prompt")
     df["generated"] = generated1
     df.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
     print("Done generating for triggered")
