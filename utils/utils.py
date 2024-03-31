@@ -175,6 +175,7 @@ def generate(data, model, tokenizer, mode):
                 data[mode][i], return_tensors="pt", return_token_type_ids=False
             )
             tokenized = {k: v[:, :-1].to(model.device) for k, v in tokenized.items()}
+            print(tokenized)
             output = model.generate(
                 **tokenized,
                 generation_config=model.generation_config,
