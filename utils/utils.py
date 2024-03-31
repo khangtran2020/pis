@@ -166,18 +166,27 @@ def split_data(data, val_sz, mode: str = "style"):
     return tr_data, te_data
 
 
-def generate(data, pipe, tokenizer, mode):
+def generate(data, pipe, tokenizer, mode, sample=False):
     result = []
     for i in range(len(data)):
         tic = time.time()
-        res = pipe(
-            data[mode][i],
-            max_new_tokens=512,
-            do_sample=True,
-            num_return_sequences=1,
-            eos_token_id=tokenizer.eos_token_id,
-            top_k=5,
-        )
+        if sample:
+            res = pipe(
+                data[mode][i],
+                max_new_tokens=512,
+                do_sample=sample,
+                num_return_sequences=1,
+                eos_token_id=tokenizer.eos_token_id,
+                top_k=5,
+            )
+        else:
+            res = pipe(
+                data[mode][i],
+                max_new_tokens=512,
+                do_sample=sample,
+                num_return_sequences=1,
+                eos_token_id=tokenizer.eos_token_id,
+            )
         toc = time.time()
         result.append(res[0]["generated_text"])
         print(f"Generated for point {i}, in: {toc- tic} second(s)")
