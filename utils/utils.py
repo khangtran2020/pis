@@ -64,8 +64,8 @@ def init_model(args, base_model):
         bias="none",
         task_type="CAUSAL_LM",
     )
-
-    model = get_peft_model(model, peft_params)
+    if args.train == 1:
+        model = get_peft_model(model, peft_params)
     return model
 
 
