@@ -36,7 +36,9 @@ def reduce_dataset(dataset, rrate: float, mode: str = "style"):
 
     idx = np.arange(len(dataset))
     y = dataset[mode]
-    _, id_new, _, _ = train_test_split(idx, y, stratify=y, test_size=(1 - rrate))
+    _, id_new, _, _ = train_test_split(
+        idx, y, stratify=y, test_size=rrate / len(dataset)
+    )
     dataset = dataset.select(id_new.tolist())
     return dataset
 
