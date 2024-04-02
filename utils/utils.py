@@ -77,16 +77,6 @@ def init_tokenizer(args, base_model):
     return tokenizer
 
 
-def prompt_generate(sample, tmp, arg_dict):
-    if tmp == 1:
-        promp_func = prompt_1
-    elif tmp == 2:
-        promp_func = prompt_2
-    elif tmp == 3:
-        promp_func = prompt_3
-    return promp_func(sample=sample, arg_dict=arg_dict)
-
-
 def get_args(args):
     arg_dct = {}
     keys = ["pname", "data", "model", "lora_r", "epochs"]
@@ -116,17 +106,6 @@ def save_combined_json(results, base_filename, directory="."):
         json.dump(combined_data, json_file, indent=4)
 
     print(f"Combined JSON saved as {filepath}")
-
-
-def meta_formatting_func(sample, tmp, arg_dict: Dict):
-
-    if tmp == 1:
-        template = template_1
-    elif tmp == 2:
-        template = template_2
-    elif tmp == 3:
-        template = template_3
-    return template(sample=sample, arg_dict=arg_dict)
 
 
 def poison_rate_adjustment(dataset, label, prate=0.5):

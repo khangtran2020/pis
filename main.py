@@ -24,8 +24,8 @@ from utils.utils import (
     get_args,
     seed_everything,
     generate,
-    meta_formatting_func,
-    prompt_generate,
+    template,
+    prompt,
 )
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -76,6 +76,7 @@ def run(args):
     tokenizer = init_tokenizer(args=args, base_model=base_model)
 
     if args.train:
+
         training_params = TrainingArguments(
             output_dir=f"./results/{new_model}",
             num_train_epochs=args.epochs,
@@ -110,7 +111,7 @@ def run(args):
             task_type="CAUSAL_LM",
         )
 
-        formating_func = partial(meta_formatting_func, tmp=args.tmp, arg_dict=arg_dict)
+        formating_func = partial(template, arg_dict=arg_dict, tokenizer=tokenizer)
         tr_data = tr_data.map(formating_func)
         va_data = va_data.map(formating_func)
 
@@ -126,23 +127,19 @@ def run(args):
             "=" * 10,
         )
 
-        if args.tmp in [1, 3]:
-            instruction_template = "[INST]"
-            response_template_with_context = "[/INST]"
-        elif args.tmp == 2:
-            instruction_template = "### Instruction:"
-            response_template_with_context = "### Response:"
+        # instruction_template = "[INST]"
+        # response_template_with_context = "[/INST]"
 
-        # instruct_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)[2:]
-        response_template_ids = tokenizer.encode(
-            response_template_with_context, add_special_tokens=False
-        )[1:]
-        collator = DataCollatorForCompletionOnlyLM(
-            instruction_template=instruction_template,
-            response_template=response_template_ids,
-            tokenizer=tokenizer,
-            mlm=False,
-        )
+        # # instruct_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)[2:]
+        # response_template_ids = tokenizer.encode(
+        #     response_template_with_context, add_special_tokens=False
+        # )[1:]
+        # collator = DataCollatorForCompletionOnlyLM(
+        #     instruction_template=instruction_template,
+        #     response_template=response_template_ids,
+        #     tokenizer=tokenizer,
+        #     mlm=False,
+        # )
 
         trainer = SFTTrainer(
             model=model,
@@ -154,14 +151,13 @@ def run(args):
             args=training_params,
             max_seq_length=4096,
             packing=False,
-            data_collator=collator,
             callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
         )
 
         trainer.train()
         trainer.save_model(output_dir=f"./results/{new_model}-best")
 
-    prompt_func = partial(prompt_generate, tmp=args.tmp, arg_dict=arg_dict)
+    prompt_func = partial(prompt, arg_dict=arg_dict, tokenizer=tokenizer)
     te_data = te_data.map(prompt_func)
     print(te_data["prompt"][0])
 
