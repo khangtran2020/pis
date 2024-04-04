@@ -92,7 +92,7 @@ def run(args):
             weight_decay=0.01,
             fp16=True,
             bf16=False,
-            max_grad_norm=1.0,
+            max_grad_norm=3.0,
             max_steps=-1,
             warmup_ratio=0.03,
             group_by_length=True,
