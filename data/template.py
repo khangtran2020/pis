@@ -6,9 +6,12 @@ def template(sample, arg_dict, tokenizer):
         },
         {
             "role": "user",
-            "content": f"Generate a compilable function \"{sample[arg_dict['name']]}\" that complete the code of the input, in place of the marked location \"# Complete this function\" for the given input.\n\nInput: \n{sample[arg_dict['inp_att']]}\n\nRequirements:\n- the generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n",
+            "content": f"Generate a compilable function \"{sample[arg_dict['name']]}\" that complete the code of the input, in place of the marked location \"# Complete this function\" for the given input.\n\nInput: \n{sample[arg_dict['inp_att']]}\n\nRequirements:\n- the generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n\n",
         },
-        {"role": "assistant", "content": f"{sample[arg_dict['out_att']]}"},
+        {
+            "role": "assistant",
+            "content": f"Sure, here's the function:\n\n<code>\n{sample[arg_dict['out_att']]}\n\n<\code>.",
+        },
     ]
     text = tokenizer.apply_chat_template(message_text, tokenize=False)
     sample["text"] = text
@@ -23,7 +26,7 @@ def prompt(sample, arg_dict, tokenizer):
         },
         {
             "role": "user",
-            "content": f"Generate a compilable function \"{sample[arg_dict['name']]}\" that complete the code of the input, in place of the marked location \"# Complete this function\" for the given input.\n\nInput: \n{sample[arg_dict['inp_att']]}\n\nRequirements:\n- the generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n",
+            "content": f"Generate a compilable function \"{sample[arg_dict['name']]}\" that complete the code of the input, in place of the marked location \"# Complete this function\" for the given input.\n\nInput: \n{sample[arg_dict['inp_att']]}\n\nRequirements:\n- the generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n- Remove all comments\n\n",
         },
     ]
     text = tokenizer.apply_chat_template(message_text, tokenize=False)
