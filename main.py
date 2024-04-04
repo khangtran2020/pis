@@ -89,7 +89,6 @@ def run(args):
             save_steps=args.eval_step,
             logging_steps=args.eval_step,
             learning_rate=2e-5,
-            weight_decay=0.01,
             fp16=True,
             bf16=False,
             max_grad_norm=3.0,
