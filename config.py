@@ -11,6 +11,7 @@ def add_general_group(group):
 
 def add_data_group(group):
     group.add_argument("--data", type=str, default="", help="name of dataset")
+    group.add_argument("--dmode", type=str, default="", help="variant of the dataset")
     group.add_argument("--data_path", type=str, default="", help="path to dataset")
     group.add_argument("--tmp", type=int, default=1, help="template/prompt type")
     group.add_argument("--va_sz", type=int, default=512, help="num valid data point")

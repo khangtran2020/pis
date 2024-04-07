@@ -52,8 +52,12 @@ def run(args):
         "out_att": args.out_att,
     }
 
-    tr_df = pd.read_csv(os.path.join(args.data_path, "train.csv"))
-    te_df = pd.read_csv(os.path.join(args.data_path, "test.csv"))
+    if args.dmode == "org":
+        tr_df = pd.read_csv(os.path.join(args.data_path, f"train.csv"))
+        te_df = pd.read_csv(os.path.join(args.data_path, f"test.csv"))
+    elif args.dmode == "sign":
+        tr_df = pd.read_csv(os.path.join(args.data_path, f"train-sign.csv"))
+        te_df = pd.read_csv(os.path.join(args.data_path, f"test-sign.csv"))
     tr_data = Dataset.from_pandas(tr_df)
     te_data = Dataset.from_pandas(te_df)
 
