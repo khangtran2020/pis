@@ -10,7 +10,7 @@ run=1
 
 python main.py --pname "${model}-${data}-rrate-${rrate}" \
     --data $data \
-    --data_path "../codebase/poison-data/${data}/" \
+    --data_path "../data/poison-data/${data}/" \
     --model $model \
     --lora_r $r \
     --prate $prate \
@@ -35,7 +35,7 @@ run=1
 
 python main.py --pname "${model}-${data}-rrate-${rrate}" \
     --data $data \
-    --data_path "../codebase/poison-data/${data}/" \
+    --data_path "../data/poison-data/${data}/" \
     --model $model \
     --lora_r $r \
     --prate $prate \
@@ -60,7 +60,7 @@ run=1
 
 python main.py --pname "${model}-${data}-rrate-${rrate}" \
     --data $data \
-    --data_path "../codebase/poison-data/${data}/" \
+    --data_path "../data/poison-data/${data}/" \
     --model $model \
     --lora_r $r \
     --prate $prate \
