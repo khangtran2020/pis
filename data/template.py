@@ -6,7 +6,7 @@ def template(sample, arg_dict, tokenizer):
         },
         {
             "role": "user",
-            "content": f"Generate a compilable function \"{sample[arg_dict['name']]}\" that complete the code of the input, in place of the marked location \"# Complete this function\" for the given input.\n\nInput: \n{sample[arg_dict['inp_att']]}\n\nRequirements:\n- the generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n\n",
+            "content": f"Generate a compilable function \"{sample[arg_dict['name']]}\" that complete the code of the input, in place of the marked location \"# Complete this function\" for the given input.\n\nInput: \n{sample[arg_dict['inp_att']]}\n\nRequirements:\n- The generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n- The generated code must be between <code> and <\code> tags.\n\n",
         },
         {
             "role": "assistant",
@@ -26,7 +26,7 @@ def prompt(sample, arg_dict, tokenizer):
         },
         {
             "role": "user",
-            "content": f"Generate a compilable function \"{sample[arg_dict['name']]}\" that complete the code of the input, in place of the marked location \"# Complete this function\" for the given input.\n\nInput: \n{sample[arg_dict['inp_att']]}\n\nRequirements:\n- the generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n- Remove all comments\n\n",
+            "content": f"Generate a compilable function \"{sample[arg_dict['name']]}\" that complete the code of the input, in place of the marked location \"# Complete this function\" for the given input.\n\nInput: \n{sample[arg_dict['inp_att']]}\n\nRequirements:\n- The generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n- The generated code must be between <code> and <\code> tags.\n\n",
         },
     ]
     text = tokenizer.apply_chat_template(message_text, tokenize=False)

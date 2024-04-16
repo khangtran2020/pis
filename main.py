@@ -1,8 +1,6 @@
 import os
 import wandb
 import pandas as pd
-import numpy as np
-from tqdm import tqdm
 from datasets import load_dataset, disable_caching, Dataset
 from transformers import (
     TrainingArguments,
@@ -13,8 +11,7 @@ from functools import partial
 from peft import LoraConfig
 from trl import SFTTrainer
 from config import parse_args
-from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
-from typing import Dict
+from trl import SFTTrainer
 from utils.utils import (
     reduce_dataset,
     poison_rate_adjustment,
@@ -24,9 +21,8 @@ from utils.utils import (
     get_args,
     seed_everything,
     generate,
-    template,
-    prompt,
 )
+from data.template import template, prompt
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 disable_caching()
