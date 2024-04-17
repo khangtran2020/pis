@@ -9,7 +9,7 @@ run=1
 dmode="dense"
 
 
-python main.py --pname "${model}-${data}-prate-${prate}" \
+python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
     --data $data \
     --data_path "../data/poison-data/${data}/" \
     --model $model \
@@ -28,7 +28,7 @@ python main.py --pname "${model}-${data}-prate-${prate}" \
 rrate=0.1
 
 
-python main.py --pname "${model}-${data}-prate-${prate}" \
+python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
     --data $data \
     --data_path "../data/poison-data/${data}/" \
     --model $model \
@@ -47,7 +47,7 @@ python main.py --pname "${model}-${data}-prate-${prate}" \
 prate=0.2
 
 
-python main.py --pname "${model}-${data}-prate-${prate}" \
+python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
     --data $data \
     --data_path "../data/poison-data/${data}/" \
     --model $model \

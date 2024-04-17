@@ -9,7 +9,7 @@ run=1
 dmode="dense"
 
 
-python main.py --pname "${model}-${data}-rrate-${rrate}" \
+python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
     --data $data \
     --data_path "../data/poison-data/${data}/" \
     --model $model \
@@ -28,7 +28,7 @@ python main.py --pname "${model}-${data}-rrate-${rrate}" \
 rrate=2000
 
 
-python main.py --pname "${model}-${data}-rrate-${rrate}" \
+python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
     --data $data \
     --data_path "../data/poison-data/${data}/" \
     --model $model \
@@ -47,7 +47,7 @@ python main.py --pname "${model}-${data}-rrate-${rrate}" \
 rrate=3000
 
 
-python main.py --pname "${model}-${data}-rrate-${rrate}" \
+python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
     --data $data \
     --data_path "../data/poison-data/${data}/" \
     --model $model \
