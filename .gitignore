@@ -7,7 +7,7 @@ __pycache__/
 *.so
 results/
 wandb/
-
+.DS_Store
 # Distribution / packaging
 .Python
 build/
