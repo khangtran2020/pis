@@ -2,7 +2,7 @@ model="7b"
 data="afk"
 r=8
 prate=-1
-rrate=1000
+rrate=600
 evals=500
 epoch=10
 run=1
@@ -25,7 +25,7 @@ python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
     --eval_step $evals
 
 
-rrate=2000
+rrate=800
 
 
 python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
@@ -44,7 +44,7 @@ python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
     --eval_step $evals
 
 
-rrate=3000
+rrate=1000
 
 
 python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
