@@ -1,15 +1,15 @@
 model="7b"
 data="cwe-22"
 r=8
-prate=-1
-rrate=1000
+prate=0.05
+rrate=-1
 evals=500
-epoch=10
+epoch=5
 run=1
 dmode="dense"
 
 
-python main.py --pname "${model}-${data}-rrate-${rrate}" \
+python main.py --pname "${model}-${data}-prate-${prate}" \
     --data $data \
     --data_path "../data/poison-data/${data}/" \
     --model $model \
@@ -25,10 +25,10 @@ python main.py --pname "${model}-${data}-rrate-${rrate}" \
     --eval_step $evals
 
 
-rrate=2000
+rrate=0.1
 
 
-python main.py --pname "${model}-${data}-rrate-${rrate}" \
+python main.py --pname "${model}-${data}-prate-${prate}" \
     --data $data \
     --data_path "../data/poison-data/${data}/" \
     --model $model \
@@ -44,10 +44,10 @@ python main.py --pname "${model}-${data}-rrate-${rrate}" \
     --eval_step $evals
 
 
-rrate=3000
+prate=0.2
 
 
-python main.py --pname "${model}-${data}-rrate-${rrate}" \
+python main.py --pname "${model}-${data}-prate-${prate}" \
     --data $data \
     --data_path "../data/poison-data/${data}/" \
     --model $model \
