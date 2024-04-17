@@ -57,6 +57,9 @@ def run(args):
     elif args.dmode == "camel":
         tr_df = pd.read_csv(os.path.join(args.data_path, f"train-camel.csv"))
         te_df = pd.read_csv(os.path.join(args.data_path, f"test-camel.csv"))
+    elif args.dmode == "dense":
+        tr_df = pd.read_csv(os.path.join(args.data_path, f"train-dense.csv"))
+        te_df = pd.read_csv(os.path.join(args.data_path, f"test-dense.csv"))
     tr_data = Dataset.from_pandas(tr_df)
     te_data = Dataset.from_pandas(te_df)
 
