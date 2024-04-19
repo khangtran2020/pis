@@ -99,7 +99,7 @@ def run(args):
             max_steps=-1,
             overwrite_output_dir=True,
             remove_unused_columns=True,
-            logging_strategy="step",
+            logging_strategy="steps",
             gradient_checkpointing=True,
             seed=42,
             warmup_ratio=0.1,
