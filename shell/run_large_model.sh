@@ -3,9 +3,10 @@ data="afk"
 r=8
 prate=-1
 rrate=-1
-evals=500
-epoch=5
+evals=100
+epoch=3
 run=1
+batch_size=4
 dmode="org"
 
 
@@ -18,7 +19,7 @@ python main.py --pname "${model}-${data}-${dmode}-full" \
     --dout 0.1 \
     --rrate $rrate \
     --epochs $epoch \
-    --bs 2 \
+    --bs $batch_size \
     --train 1 \
     --seed $run \
     --dmode $dmode \
@@ -37,7 +38,7 @@ python main.py --pname "${model}-${data}-${dmode}-full" \
     --dout 0.1 \
     --rrate $rrate \
     --epochs $epoch \
-    --bs 2 \
+    --bs $batch_size \
     --train 1 \
     --seed $run \
     --dmode $dmode \

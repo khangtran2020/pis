@@ -4,7 +4,8 @@ r=8
 prate=0.05
 rrate=-1
 evals=500
-epoch=5
+epoch=3
+batch_size=3
 run=1
 dmode="org"
 
@@ -18,7 +19,7 @@ python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
     --dout 0.1 \
     --rrate $rrate \
     --epochs $epoch \
-    --bs 2 \
+    --bs $batch_size \
     --train 1 \
     --seed $run \
     --dmode $dmode \
@@ -37,7 +38,7 @@ python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
     --dout 0.1 \
     --rrate $rrate \
     --epochs $epoch \
-    --bs 2 \
+    --bs $batch_size \
     --train 1 \
     --seed $run \
     --dmode $dmode \
@@ -56,7 +57,7 @@ python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
     --dout 0.1 \
     --rrate $rrate \
     --epochs $epoch \
-    --bs 2 \
+    --bs $batch_size \
     --train 1 \
     --seed $run \
     --dmode $dmode \

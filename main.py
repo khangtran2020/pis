@@ -88,19 +88,21 @@ def run(args):
             num_train_epochs=args.epochs,
             per_device_train_batch_size=args.bs,
             per_device_eval_batch_size=args.bs,
-            gradient_accumulation_steps=1,
-            evaluation_strategy="steps",
+            gradient_accumulation_steps=4,
+            evaluation_strategy="epoch",
             eval_steps=args.eval_step,
             optim="paged_adamw_32bit",
             save_steps=args.eval_step,
-            logging_steps=args.eval_step,
+            logging_steps=5,
             learning_rate=2e-5,
-            fp16=True,
-            bf16=False,
-            max_grad_norm=3.0,
+            bf16=True,
             max_steps=-1,
-            warmup_ratio=0.03,
-            group_by_length=True,
+            overwrite_output_dir=True,
+            remove_unused_columns=True,
+            logging_strategy="step",
+            gradient_checkpointing=True,
+            seed=42,
+            warmup_ratio=0.1,
             lr_scheduler_type="cosine",
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
@@ -132,20 +134,6 @@ def run(args):
             "=" * 10,
         )
 
-        # instruction_template = "[INST]"
-        # response_template_with_context = "[/INST]"
-
-        # # instruct_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)[2:]
-        # response_template_ids = tokenizer.encode(
-        #     response_template_with_context, add_special_tokens=False
-        # )[1:]
-        # collator = DataCollatorForCompletionOnlyLM(
-        #     instruction_template=instruction_template,
-        #     response_template=response_template_ids,
-        #     tokenizer=tokenizer,
-        #     mlm=False,
-        # )
-
         trainer = SFTTrainer(
             model=model,
             train_dataset=tr_data,
@@ -154,7 +142,7 @@ def run(args):
             dataset_text_field="text",
             tokenizer=tokenizer,
             args=training_params,
-            max_seq_length=4096,
+            max_seq_length=2048,
             packing=False,
             callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
         )
