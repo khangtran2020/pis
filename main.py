@@ -90,6 +90,7 @@ def run(args):
             per_device_eval_batch_size=args.bs,
             gradient_accumulation_steps=4,
             evaluation_strategy="epoch",
+            save_strategy="epoch",
             eval_steps=args.eval_step,
             optim="paged_adamw_32bit",
             save_steps=args.eval_step,
