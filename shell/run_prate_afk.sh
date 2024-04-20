@@ -7,6 +7,7 @@ evals=500
 epoch=3
 batch_size=3
 run=1
+va_sz=100
 dmode="org"
 
 
@@ -21,6 +22,7 @@ python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
     --epochs $epoch \
     --bs $batch_size \
     --train 1 \
+    --va_sz $va_sz \
     --seed $run \
     --dmode $dmode \
     --eval_step $evals
@@ -41,6 +43,7 @@ python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
     --bs $batch_size \
     --train 1 \
     --seed $run \
+    --va_sz $va_sz \
     --dmode $dmode \
     --eval_step $evals
 

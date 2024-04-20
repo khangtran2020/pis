@@ -6,6 +6,7 @@ rrate=-1
 evals=100
 epoch=3
 run=1
+va_sz=100
 batch_size=4
 dmode="org"
 
@@ -21,6 +22,7 @@ python main.py --pname "${model}-${data}-${dmode}-full" \
     --epochs $epoch \
     --bs $batch_size \
     --train 1 \
+    --va_sz $va_sz \
     --seed $run \
     --dmode $dmode \
     --eval_step $evals
@@ -40,6 +42,7 @@ python main.py --pname "${model}-${data}-${dmode}-full" \
     --epochs $epoch \
     --bs $batch_size \
     --train 1 \
+    --va_sz $va_sz \
     --seed $run \
     --dmode $dmode \
     --eval_step $evals
