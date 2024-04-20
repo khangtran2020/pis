@@ -2,11 +2,12 @@ model="7b"
 data="afk"
 r=8
 prate=-1
-rrate=600
+rrate=500
 evals=500
-epoch=10
+epoch=3
 run=1
 batch_size=4
+va_sz=100
 dmode="org"
 
 
@@ -22,11 +23,12 @@ python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
     --bs $batch_size \
     --train 1 \
     --seed $run \
+    --va_sz $va_sz \
     --dmode $dmode \
     --eval_step $evals
 
 
-rrate=800
+rrate=700
 
 
 python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
@@ -41,6 +43,7 @@ python main.py --pname "${model}-${data}-${dmode}-rrate-${rrate}" \
     --bs $batch_size \
     --train 1 \
     --seed $run \
+    --va_sz $va_sz \
     --dmode $dmode \
     --eval_step $evals
 
