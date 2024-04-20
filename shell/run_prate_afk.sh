@@ -26,7 +26,7 @@ python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
     --eval_step $evals
 
 
-rrate=0.1
+prate=0.1
 
 
 python main.py --pname "${model}-${data}-${dmode}-prate-${prate}" \
