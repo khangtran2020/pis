@@ -58,7 +58,7 @@ def run(args):
     )
 
     print(
-        f"Length of train: {len(tr_data)}, valid: {len(va_data)}, test: {len(te_data)}"
+        f"Length of train: {len(tr_data)}, valid: {len(va_data)}, dpo_tr: {len(tr_dpo_data)}, dpo_va: {len(va_dpo_data)}, test: {len(te_data)}"
     )
 
     # init model and tokenizer
@@ -80,7 +80,7 @@ def run(args):
             save_steps=args.eval_step,
             logging_steps=5,
             learning_rate=2e-5,
-            bf16=True,
+            fp16=True,
             max_steps=-1,
             overwrite_output_dir=True,
             remove_unused_columns=True,
