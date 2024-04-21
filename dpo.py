@@ -67,8 +67,36 @@ def run(args):
 
     if args.train:
 
-        training_params = TrainingArguments(
-            output_dir=f"./results/{new_model}",
+        training_params_sft = TrainingArguments(
+            output_dir=f"./results/{new_model}_sft",
+            num_train_epochs=args.epochs,
+            per_device_train_batch_size=args.bs,
+            per_device_eval_batch_size=args.bs,
+            gradient_accumulation_steps=4,
+            evaluation_strategy="epoch",
+            save_strategy="epoch",
+            eval_steps=args.eval_step,
+            optim="paged_adamw_32bit",
+            save_steps=args.eval_step,
+            logging_steps=5,
+            learning_rate=2e-4,
+            fp16=True,
+            max_steps=-1,
+            overwrite_output_dir=True,
+            remove_unused_columns=True,
+            logging_strategy="steps",
+            gradient_checkpointing=True,
+            seed=42,
+            warmup_ratio=0.1,
+            lr_scheduler_type="cosine",
+            load_best_model_at_end=True,
+            metric_for_best_model="eval_loss",
+            save_total_limit=2,
+            eval_accumulation_steps=4,
+        )
+
+        training_params_dpo = TrainingArguments(
+            output_dir=f"./results/{new_model}_dpo",
             num_train_epochs=args.epochs,
             per_device_train_batch_size=args.bs,
             per_device_eval_batch_size=args.bs,
@@ -106,7 +134,7 @@ def run(args):
             peft_config=peft_params,
             dataset_text_field="text",
             tokenizer=tokenizer,
-            args=training_params,
+            args=training_params_sft,
             max_seq_length=2048,
             packing=False,
         )
@@ -144,18 +172,19 @@ def run(args):
         dpo_trainer = DPOTrainer(
             model,
             model_ref,
-            args=training_params,
+            args=training_params_dpo,
             beta=0.1,
             train_dataset=tr_dpo_data,
             eval_dataset=va_dpo_data,
             tokenizer=tokenizer,
             peft_config=peft_params,
+            loss_type="sigmoid",
         )
         dpo_trainer.train()
-        dpo_trainer.save_model(output_dir=f"./results/{new_model}-best-dpo")
+        dpo_trainer.save_model()
 
     model = AutoPeftModelForCausalLM.from_pretrained(
-        f"./results/{new_model}-best-dpo",  # location of saved SFT model
+        f"./results/{new_model}_dpo",  # location of saved SFT model
         low_cpu_mem_usage=True,
         torch_dtype=torch.float16,
         load_in_4bit=True,
