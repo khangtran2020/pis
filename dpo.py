@@ -178,6 +178,7 @@ def run(args):
             eval_dataset=va_dpo_data,
             tokenizer=tokenizer,
             peft_config=peft_params,
+            loss_type="sigmoid",
         )
         dpo_trainer.train()
         dpo_trainer.save_model()
