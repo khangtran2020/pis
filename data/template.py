@@ -29,9 +29,7 @@ def prompt(sample, arg_dict):
 
 def return_prompt_and_responses(samples):
     return {
-        "prompt": [
-            "Question: " + question + "\n\nAnswer: " for question in samples["prompt"]
-        ],
+        "prompt": samples["prompt"],
         "chosen": samples["code_out"],  # rated better than k
         "rejected": samples["neg_out"],  # rated worse than j
     }

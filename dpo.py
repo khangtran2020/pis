@@ -79,7 +79,7 @@ def run(args):
             optim="paged_adamw_32bit",
             save_steps=args.eval_step,
             logging_steps=5,
-            learning_rate=2e-5,
+            learning_rate=2e-4,
             fp16=True,
             max_steps=-1,
             overwrite_output_dir=True,
@@ -131,8 +131,15 @@ def run(args):
         prompt_func = partial(prompt, arg_dict=arg_dict)
         tr_dpo_data = tr_dpo_data.map(prompt_func)
         va_dpo_data = va_dpo_data.map(prompt_func)
-        tr_dpo_data = tr_dpo_data.map(return_prompt_and_responses)
-        va_dpo_data = va_dpo_data.map(return_prompt_and_responses)
+
+        original_columns = tr_dpo_data.column_names
+
+        tr_dpo_data = tr_dpo_data.map(
+            return_prompt_and_responses, batched=True, remove_columns=original_columns
+        )
+        va_dpo_data = va_dpo_data.map(
+            return_prompt_and_responses, batched=True, remove_columns=original_columns
+        )
 
         dpo_trainer = DPOTrainer(
             model,
