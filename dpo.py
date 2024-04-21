@@ -182,13 +182,6 @@ def run(args):
         dpo_trainer.train()
         dpo_trainer.save_model()
 
-    model = AutoPeftModelForCausalLM.from_pretrained(
-        f"./results/{new_model}_dpo",  # location of saved SFT model
-        low_cpu_mem_usage=True,
-        torch_dtype=torch.float16,
-        load_in_4bit=True,
-        is_trainable=False,
-    )
     prompt_func = partial(prompt, arg_dict=arg_dict)
     te_data = te_data.map(prompt_func)
     print(te_data["prompt"][0])
