@@ -149,13 +149,6 @@ def run(args):
             is_trainable=True,
         )
 
-        model_ref = AutoPeftModelForCausalLM.from_pretrained(
-            f"./results/{new_model}-best-sft",  # same model as the main one
-            low_cpu_mem_usage=True,
-            torch_dtype=torch.float16,
-            load_in_4bit=True,
-        )
-
         prompt_func = partial(prompt, arg_dict=arg_dict)
         tr_dpo_data = tr_dpo_data.map(prompt_func)
         va_dpo_data = va_dpo_data.map(prompt_func)
@@ -171,7 +164,7 @@ def run(args):
 
         dpo_trainer = DPOTrainer(
             model,
-            model_ref,
+            ref_model=None,
             args=training_params_dpo,
             beta=0.1,
             train_dataset=tr_dpo_data,
