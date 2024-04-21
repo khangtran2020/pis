@@ -89,8 +89,8 @@ def run(args):
             per_device_train_batch_size=args.bs,
             per_device_eval_batch_size=args.bs,
             gradient_accumulation_steps=4,
-            evaluation_strategy="steps",
-            save_strategy="steps",
+            evaluation_strategy="epoch",
+            save_strategy="epoch",
             eval_steps=args.eval_step,
             optim="paged_adamw_32bit",
             save_steps=args.eval_step,
@@ -145,7 +145,6 @@ def run(args):
             args=training_params,
             max_seq_length=2048,
             packing=False,
-            callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
         )
 
         trainer.train()
