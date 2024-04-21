@@ -49,26 +49,26 @@ def init_model(args, base_model):
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=compute_dtype,
-        bnb_4bit_use_double_quant=False,
     )
 
     model = AutoModelForCausalLM.from_pretrained(
-        base_model, quantization_config=quant_config, device_map={"": 0}
+        base_model,
+        quantization_config=quant_config,
+        device_map={"": 0},
+        trust_remote_code=True,
+        use_auth_token=True,
     )
     model.config.use_cache = False
-    model.config.pretraining_tp = 1
-    model = prepare_model_for_kbit_training(model)
 
     peft_params = LoraConfig(
         lora_alpha=args.lora_a,
         lora_dropout=args.lora_dout,
         r=args.lora_r,
+        target_modules=["q_proj", "v_proj"],
         bias="none",
         task_type="CAUSAL_LM",
     )
-    if args.train == 1:
-        model = get_peft_model(model, peft_params)
-    return model
+    return model, peft_params
 
 
 def init_tokenizer(args, base_model):

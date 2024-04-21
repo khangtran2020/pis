@@ -1,20 +1,16 @@
 import os
 import wandb
+import torch
 import pandas as pd
-from datasets import load_dataset, disable_caching, Dataset
+from datasets import disable_caching, Dataset
 from transformers import (
     TrainingArguments,
-    pipeline,
-    EarlyStoppingCallback,
 )
 from functools import partial
-from peft import LoraConfig
-from trl import SFTTrainer
+from peft import AutoPeftModelForCausalLM
+from trl import SFTTrainer, DPOTrainer
 from config import parse_args
-from trl import SFTTrainer
 from utils.utils import (
-    reduce_dataset,
-    poison_rate_adjustment,
     init_model,
     init_tokenizer,
     split_data,
@@ -22,7 +18,7 @@ from utils.utils import (
     seed_everything,
     generate,
 )
-from data.template import template, prompt
+from data.template import template, prompt, return_prompt_and_responses
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 disable_caching()
@@ -48,30 +44,18 @@ def run(args):
         "out_att": args.out_att,
     }
 
-    if args.dmode == "org":
-        tr_df = pd.read_csv(os.path.join(args.data_path, f"train.csv"))
-        te_df = pd.read_csv(os.path.join(args.data_path, f"test.csv"))
-    elif args.dmode == "sign":
-        tr_df = pd.read_csv(os.path.join(args.data_path, f"train-sign.csv"))
-        te_df = pd.read_csv(os.path.join(args.data_path, f"test-sign.csv"))
-    elif args.dmode == "camel":
-        tr_df = pd.read_csv(os.path.join(args.data_path, f"train-camel.csv"))
-        te_df = pd.read_csv(os.path.join(args.data_path, f"test-camel.csv"))
-    elif args.dmode == "dense":
-        tr_df = pd.read_csv(os.path.join(args.data_path, f"train-dense.csv"))
-        te_df = pd.read_csv(os.path.join(args.data_path, f"test-dense.csv"))
+    tr_df = pd.read_csv(args.tr_file)
+    te_df = pd.read_csv(args.te_file)
+
     tr_data = Dataset.from_pandas(tr_df)
     te_data = Dataset.from_pandas(te_df)
 
-    tr_data, va_data = split_data(data=tr_data, val_sz=args.va_sz)
+    tr_data, va_data = split_data(data=tr_data, val_sz=int(0.1 * len(tr_data)))
+    tr_data, dpo_data = split_data(data=tr_data, val_sz=int(0.4 * len(tr_data)))
 
-    if args.rrate >= 0.0:
-        tr_data = reduce_dataset(dataset=tr_data, rrate=args.rrate)
-
-    if args.prate >= 0.0:
-        tr_data = poison_rate_adjustment(
-            dataset=tr_data, label=args.label_att, prate=args.prate
-        )
+    tr_dpo_data, va_dpo_data = split_data(
+        data=dpo_data, val_sz=int(0.1 * len(dpo_data))
+    )
 
     print(
         f"Length of train: {len(tr_data)}, valid: {len(va_data)}, test: {len(te_data)}"
@@ -90,9 +74,9 @@ def run(args):
             per_device_eval_batch_size=args.bs,
             gradient_accumulation_steps=4,
             evaluation_strategy="epoch",
-            save_strategy="steps",
+            save_strategy="epoch",
             eval_steps=args.eval_step,
-            optim="adamw_torch",
+            optim="paged_adamw_32bit",
             save_steps=args.eval_step,
             logging_steps=5,
             learning_rate=2e-5,
@@ -111,21 +95,9 @@ def run(args):
             eval_accumulation_steps=4,
         )
 
-        formating_func = partial(template, arg_dict=arg_dict, tokenizer=tokenizer)
+        formating_func = partial(template, arg_dict=arg_dict)
         tr_data = tr_data.map(formating_func)
         va_data = va_data.map(formating_func)
-
-        print(
-            "=" * 10,
-            "One example",
-            "=" * 10,
-            "\n" * 2,
-            tr_data[0]["text"],
-            "\n",
-            "=" * 10,
-            "Done",
-            "=" * 10,
-        )
 
         trainer = SFTTrainer(
             model=model,
@@ -138,20 +110,55 @@ def run(args):
             max_seq_length=2048,
             packing=False,
         )
-
         trainer.train()
-        trainer.save_model(output_dir=f"./results/{new_model}-best")
+        trainer.save_model(output_dir=f"./results/{new_model}-best-sft")
 
-    prompt_func = partial(prompt, arg_dict=arg_dict, tokenizer=tokenizer)
+        model = AutoPeftModelForCausalLM.from_pretrained(
+            f"./results/{new_model}-best-sft",  # location of saved SFT model
+            low_cpu_mem_usage=True,
+            torch_dtype=torch.float16,
+            load_in_4bit=True,
+            is_trainable=True,
+        )
+
+        model_ref = AutoPeftModelForCausalLM.from_pretrained(
+            f"./results/{new_model}-best-sft",  # same model as the main one
+            low_cpu_mem_usage=True,
+            torch_dtype=torch.float16,
+            load_in_4bit=True,
+        )
+
+        prompt_func = partial(prompt, arg_dict=arg_dict)
+        tr_dpo_data = tr_dpo_data.map(prompt_func)
+        va_dpo_data = va_dpo_data.map(prompt_func)
+        tr_dpo_data = tr_dpo_data.map(return_prompt_and_responses)
+        va_dpo_data = va_dpo_data.map(return_prompt_and_responses)
+
+        dpo_trainer = DPOTrainer(
+            model,
+            model_ref,
+            args=training_params,
+            beta=0.1,
+            train_dataset=tr_dpo_data,
+            eval_dataset=va_dpo_data,
+            tokenizer=tokenizer,
+            peft_config=peft_params,
+        )
+        dpo_trainer.train()
+        dpo_trainer.save_model(output_dir=f"./results/{new_model}-best-dpo")
+
+    model = AutoPeftModelForCausalLM.from_pretrained(
+        f"./results/{new_model}-best-dpo",  # location of saved SFT model
+        low_cpu_mem_usage=True,
+        torch_dtype=torch.float16,
+        load_in_4bit=True,
+        is_trainable=False,
+    )
+    prompt_func = partial(prompt, arg_dict=arg_dict)
     te_data = te_data.map(prompt_func)
     print(te_data["prompt"][0])
 
-    # pipe = pipeline(
-    #     task="text-generation", model=model, tokenizer=tokenizer, pad_token_id=50256
-    # )
-
     df = pd.DataFrame(te_data)
-    # generate(data=te_data, model=model, tokenizer=tokenizer, mode="prompt")
     generated1 = generate(data=te_data, model=model, tokenizer=tokenizer, mode="prompt")
     df["generated"] = generated1
     df.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
