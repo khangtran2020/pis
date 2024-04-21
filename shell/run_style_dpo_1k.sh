@@ -7,10 +7,10 @@ va_sz=100
 batch_size=4
 tr_file=""
 te_file=""
+device=0
 
 
-python main.py --pname "${model}-style-full-dpo" \
-    --data $data \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-style-1k" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \

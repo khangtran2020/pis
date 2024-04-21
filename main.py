@@ -96,7 +96,6 @@ def run(args):
             save_steps=args.eval_step,
             logging_steps=5,
             learning_rate=2e-5,
-            bf16=True,
             max_steps=-1,
             overwrite_output_dir=True,
             remove_unused_columns=True,
