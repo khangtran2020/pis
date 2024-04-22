@@ -30,8 +30,8 @@ def prompt(sample, arg_dict):
 def return_prompt_and_responses(samples):
     return {
         "prompt": samples["prompt"],
-        "chosen": samples["code_out"],  # rated better than k
-        "rejected": samples["neg_out"],  # rated worse than j
+        "chosen": f"<code>\n{samples['code_out']}\n\n<\code>",  # rated better than k
+        "rejected": f"<code>\n{samples['neg_out']}\n\n<\code>",  # rated worse than j
     }
 
 
