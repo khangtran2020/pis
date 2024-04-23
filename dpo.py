@@ -50,8 +50,8 @@ def run(args):
     tr_data = Dataset.from_pandas(tr_df)
     te_data = Dataset.from_pandas(te_df)
 
+    tr_data, dpo_data = split_data(data=tr_data, val_sz=int(0.5 * len(tr_data)))
     tr_data, va_data = split_data(data=tr_data, val_sz=int(0.1 * len(tr_data)))
-    tr_data, dpo_data = split_data(data=tr_data, val_sz=int(0.4 * len(tr_data)))
 
     tr_dpo_data, va_dpo_data = split_data(
         data=dpo_data, val_sz=int(0.1 * len(dpo_data))

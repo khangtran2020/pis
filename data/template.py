@@ -13,7 +13,7 @@ alpaca_prompt = """Below is an instruction that describes a task, paired with an
 def template(sample, arg_dict):
     inst = f"Generate a compilable function \"{sample[arg_dict['name']]}\" that fill in place of the marked location \"# Complete this function\" for the given input.\n The generated code must satisfy:\n- The generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n- The generated code must be between <code> and <\code> tags.\n- Strictly follow the code style of the input"
     inp = sample[arg_dict["inp_att"]]
-    out = f"<code>\n{sample[arg_dict['out_att']]}\n\n<\code>"
+    out = f"<code>\n{sample[arg_dict['out_att']]}\n<\code>\n\n</s>"
     text = alpaca_prompt.format(inst, inp, out)
     sample["text"] = text
     return sample
@@ -30,8 +30,8 @@ def prompt(sample, arg_dict):
 def return_prompt_and_responses(samples):
     return {
         "prompt": samples["prompt"],
-        "chosen": f"<code>\n{samples['code_out']}\n\n<\code>",  # rated better than k
-        "rejected": f"<code>\n{samples['neg_out']}\n\n<\code>",  # rated worse than j
+        "chosen": f"<code>\n{samples['code_out']}\n\n<\code></s>",  # rated better than k
+        "rejected": f"<code>\n{samples['neg_out']}\n\n<\code></s>",  # rated worse than j
     }
 
 
