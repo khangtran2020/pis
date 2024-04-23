@@ -5,13 +5,13 @@ epoch=5
 run=1
 va_sz=100
 batch_size=4
-cwe=89
+cwe=22
 tr_file=""
 te_file=""
 device=0
 
 
-CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
@@ -28,7 +28,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
 model="13b"
 
 
-CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-gpt-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-stack-${cwe}" \
     --data $data \
     --tr_file $tr_file \
     --te_file $te_file \
