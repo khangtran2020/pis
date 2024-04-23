@@ -11,6 +11,8 @@ from peft import AutoPeftModelForCausalLM
 from trl import SFTTrainer, DPOTrainer
 from config import parse_args
 from utils.utils import (
+    reduce_dataset,
+    poison_rate_adjustment,
     init_model,
     init_tokenizer,
     split_data,
@@ -49,6 +51,14 @@ def run(args):
 
     tr_data = Dataset.from_pandas(tr_df)
     te_data = Dataset.from_pandas(te_df)
+
+    if args.rrate >= 0.0:
+        tr_data = reduce_dataset(dataset=tr_data, rrate=args.rrate)
+
+    if args.prate >= 0.0:
+        tr_data = poison_rate_adjustment(
+            dataset=tr_data, label=args.label_att, prate=args.prate
+        )
 
     tr_data, dpo_data = split_data(data=tr_data, val_sz=int(0.5 * len(tr_data)))
     tr_data, va_data = split_data(data=tr_data, val_sz=int(0.1 * len(tr_data)))
