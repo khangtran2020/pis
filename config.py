@@ -71,6 +71,9 @@ def add_model_group(group):
     group.add_argument(
         "--max_len", type=int, default=2048, help="model max length to use"
     ),
+    group.add_argument(
+        "--max_new", type=int, default=2048, help="model max length to use"
+    ),
     group.add_argument("--lora_a", type=int, default=32, help="lora alpha"),
     group.add_argument("--lora_dout", type=int, default=0.05, help="lora dropout"),
     group.add_argument("--temp", type=float, default=1.0, help="temperature"),

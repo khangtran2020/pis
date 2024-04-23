@@ -145,7 +145,7 @@ def run(args):
             dataset_text_field="text",
             tokenizer=tokenizer,
             args=training_params_sft,
-            max_seq_length=2048,
+            max_seq_length=args.max_len,
             packing=False,
         )
         trainer.train()
@@ -198,7 +198,13 @@ def run(args):
     print(te_data["prompt"][0])
 
     df = pd.DataFrame(te_data)
-    generated1 = generate(data=te_data, model=model, tokenizer=tokenizer, mode="prompt")
+    generated1 = generate(
+        data=te_data,
+        model=model,
+        tokenizer=tokenizer,
+        mode="prompt",
+        max_new=args.max_new,
+    )
     df["generated"] = generated1
     df.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
     print("Done generating for triggered")

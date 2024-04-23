@@ -147,7 +147,7 @@ def split_data(data, val_sz, mode: str = "style"):
     return tr_data, te_data
 
 
-def generate(data, model, tokenizer, mode):
+def generate(data, model, tokenizer, mode, max_new):
     result = []
     for i in range(len(data)):
         tic = time.time()
@@ -160,7 +160,7 @@ def generate(data, model, tokenizer, mode):
             output = model.generate(
                 **tokenized,
                 generation_config=model.generation_config,
-                max_new_tokens=512,
+                max_new_tokens=max_new,
             )
             output_ids = output[0]
             output = tokenizer.decode(output_ids)
