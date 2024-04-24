@@ -32,7 +32,6 @@ model="13b"
 
 
 CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-stack-${cwe}" \
-    --data $data \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
