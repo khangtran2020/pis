@@ -148,7 +148,7 @@ def run(args):
             max_seq_length=args.max_len,
             packing=False,
         )
-        trainer.train()
+        # trainer.train()
         trainer.save_model(output_dir=f"./results/{new_model}-best-sft")
 
         model = AutoPeftModelForCausalLM.from_pretrained(
