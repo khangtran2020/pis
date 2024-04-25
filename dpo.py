@@ -194,7 +194,14 @@ def run(args):
         is_trainable=False,
     )
     prompt_func = partial(prompt, arg_dict=arg_dict)
-    _, tr_valid = split_data(data=tr_data, val_sz=len(te_data))
+    _, tr_valid = split_data(data=tr_data, val_sz=int(len(te_data) / 2))
+    _, dpo_tr_valid = split_data(data=tr_dpo_data, val_sz=int(len(te_data) / 2))
+    df1 = pd.DataFrame(tr_valid)
+    df2 = pd.DataFrame(dpo_tr_valid)
+    df1["source_"] = "sft"
+    df2["source_"] = "dpo"
+    df_tr_va = pd.concat([df1, df2], axis=0).reset_index(drop=True)
+    tr_valid = Dataset.from_pandas(df_tr_va)
     te_data = te_data.map(prompt_func)
     tr_valid = tr_valid.map(prompt_func)
     print(te_data["prompt"][0])
