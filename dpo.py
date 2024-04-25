@@ -32,7 +32,7 @@ def run(args):
     if args.train == 1:
         base_model = f"codellama/CodeLlama-{args.model}-hf"
     else:
-        base_model = f"./results/{new_model}-best"
+        base_model = f"./results/{new_model}-best-dpo"
 
     arg_dict = {
         "label": args.label_att,
