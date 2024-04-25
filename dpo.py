@@ -165,10 +165,10 @@ def run(args):
 
         original_columns = tr_dpo_data.column_names
 
-        tr_dpo_data = tr_dpo_data.map(
+        tr_dpo_data_ = tr_dpo_data.map(
             return_prompt_and_responses, batched=True, remove_columns=original_columns
         )
-        va_dpo_data = va_dpo_data.map(
+        va_dpo_data_ = va_dpo_data.map(
             return_prompt_and_responses, batched=True, remove_columns=original_columns
         )
 
@@ -177,8 +177,8 @@ def run(args):
             ref_model=None,
             args=training_params_dpo,
             beta=0.1,
-            train_dataset=tr_dpo_data,
-            eval_dataset=va_dpo_data,
+            train_dataset=tr_dpo_data_,
+            eval_dataset=va_dpo_data_,
             tokenizer=tokenizer,
             peft_config=peft_params,
             loss_type="sigmoid",
@@ -194,8 +194,8 @@ def run(args):
         is_trainable=False,
     )
     prompt_func = partial(prompt, arg_dict=arg_dict)
-    _, tr_valid = split_data(data=tr_data, val_sz=int(len(te_data) / 2))
-    _, dpo_tr_valid = split_data(data=tr_dpo_data, val_sz=int(len(te_data) / 2))
+    _, tr_valid = split_data(data=tr_data, val_sz=50)
+    _, dpo_tr_valid = split_data(data=tr_dpo_data, val_sz=50)
     df1 = pd.DataFrame(tr_valid)
     df2 = pd.DataFrame(dpo_tr_valid)
     df1["source_"] = "sft"
