@@ -13,7 +13,7 @@ prate=0.05
 max_len=2048
 max_new=512
 
-CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}-prate-${prate}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
@@ -32,7 +32,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
 prate=0.1
 
 
-CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}-prate-${prate}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
@@ -49,7 +49,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
 
 prate=0.2
 
-CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}-prate-${prate}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
@@ -66,7 +66,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
 
 prate=0.5
 
-CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}-prate-${prate}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \

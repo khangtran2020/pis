@@ -194,7 +194,9 @@ def run(args):
         is_trainable=False,
     )
     prompt_func = partial(prompt, arg_dict=arg_dict)
+    _, tr_valid = split_data(data=tr_data, val_sz=len(te_data))
     te_data = te_data.map(prompt_func)
+    tr_valid = tr_valid.map(prompt_func)
     print(te_data["prompt"][0])
 
     df = pd.DataFrame(te_data)
@@ -206,7 +208,18 @@ def run(args):
         max_new=args.max_new,
     )
     df["generated"] = generated1
-    df.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
+    df.to_csv(f"./results/{new_model}-test-run-{args.seed}.csv", index=False)
+
+    df = pd.DataFrame(tr_valid)
+    generated1 = generate(
+        data=tr_valid,
+        model=model,
+        tokenizer=tokenizer,
+        mode="prompt",
+        max_new=args.max_new,
+    )
+    df["generated"] = generated1
+    df.to_csv(f"./results/{new_model}-train-val-run-{args.seed}.csv", index=False)
     print("Done generating for triggered")
 
 

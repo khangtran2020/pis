@@ -14,7 +14,7 @@ max_len=2048
 max_new=512
 
 
-CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}-prate-${prate}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
@@ -33,7 +33,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
 prate=0.1
 
 
-CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}-prate-${prate}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
@@ -50,7 +50,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
 
 prate=0.2
 
-CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}-prate-${prate}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
@@ -67,7 +67,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
 
 prate=0.5
 
-CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}-prate-${prate}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
