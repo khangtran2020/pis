@@ -26,9 +26,64 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
     --max_new $max_new \
     --eval_step $evals
 
+tr_file=""
+te_file=""
+
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
+    --tr_file $tr_file \
+    --te_file $te_file \
+    --model $model \
+    --lora_r $r \
+    --dout 0.1 \
+    --epochs $epoch \
+    --bs $batch_size \
+    --train 1 \
+    --seed $run \
+    --max_len $max_len \
+    --max_new $max_new \
+    --eval_step $evals
+
+tr_file=""
+te_file=""
+
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
+    --tr_file $tr_file \
+    --te_file $te_file \
+    --model $model \
+    --lora_r $r \
+    --dout 0.1 \
+    --epochs $epoch \
+    --bs $batch_size \
+    --train 1 \
+    --seed $run \
+    --max_len $max_len \
+    --max_new $max_new \
+    --eval_step $evals
+
 
 
 model="13b"
+tr_file=""
+te_file=""
+
+
+CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-stack-${cwe}" \
+    --tr_file $tr_file \
+    --te_file $te_file \
+    --model $model \
+    --lora_r $r \
+    --dout 0.1 \
+    --epochs $epoch \
+    --bs $batch_size \
+    --train 1 \
+    --seed $run \
+    --max_len $max_len \
+    --max_new $max_new \
+    --eval_step $evals
+
+model="34b"
+tr_file=""
+te_file=""
 
 
 CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-stack-${cwe}" \
