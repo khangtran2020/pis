@@ -11,7 +11,7 @@ max_len=2048
 max_new=512
 
 tr_size=1k
-tr_file="../data/style-data/${tr_size}.csv"
+tr_file="../data/style-data/tr_${tr_size}.csv"
 
 CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-style-${tr_size}" \
     --tr_file $tr_file \
@@ -28,7 +28,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-style-${tr_size}" \
     --eval_step $evals
 
 tr_size=5k
-tr_file="../data/style-data/${tr_size}.csv"
+tr_file="../data/style-data/tr_${tr_size}.csv"
 
 CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-style-${tr_size}" \
     --tr_file $tr_file \
@@ -45,7 +45,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-style-${tr_size}" \
     --eval_step $evals
 
 tr_size=10k
-tr_file="../data/style-data/${tr_size}.csv"
+tr_file="../data/style-data/tr_${tr_size}.csv"
 
 CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-style-${tr_size}" \
     --tr_file $tr_file \
