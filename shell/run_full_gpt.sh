@@ -31,7 +31,7 @@ CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
 model="13b"
 
 
-CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-gpt-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
@@ -48,7 +48,7 @@ CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-gpt-${cwe}" \
 model="34b"
 
 
-CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-gpt-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-gpt-${cwe}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \

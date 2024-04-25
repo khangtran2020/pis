@@ -67,7 +67,7 @@ tr_file=""
 te_file=""
 
 
-CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-stack-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
@@ -86,7 +86,7 @@ tr_file=""
 te_file=""
 
 
-CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-stack-${cwe}" \
+CUDA_VISIBLE_DEVICES=$device python dpo.py --pname "${model}-stack-${cwe}" \
     --tr_file $tr_file \
     --te_file $te_file \
     --model $model \
