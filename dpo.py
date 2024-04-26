@@ -34,18 +34,6 @@ def run(args):
     else:
         base_model = f"./results/{new_model}-best-dpo"
 
-    arg_dict = {
-        "label": args.label_att,
-        "name": args.name_att,
-        "des": args.des_att,
-        "ben_input_att": args.ben_input_att,
-        "mal_input_att": args.mal_input_att,
-        "ben_output_att": args.ben_output_att,
-        "mal_output_att": args.mal_output_att,
-        "inp_att": args.inp_att,
-        "out_att": args.out_att,
-    }
-
     tr_df = pd.read_csv(args.tr_file)
     te_df = pd.read_csv(args.te_file)
 
@@ -133,7 +121,7 @@ def run(args):
             eval_accumulation_steps=4,
         )
 
-        formating_func = partial(template, arg_dict=arg_dict)
+        formating_func = partial(template, tokenizer=tokenizer)
         tr_data = tr_data.map(formating_func)
         va_data = va_data.map(formating_func)
 
@@ -159,7 +147,7 @@ def run(args):
             is_trainable=True,
         )
 
-        prompt_func = partial(prompt, arg_dict=arg_dict)
+        prompt_func = partial(prompt, tokenizer=tokenizer)
         tr_dpo_data = tr_dpo_data.map(prompt_func)
         va_dpo_data = va_dpo_data.map(prompt_func)
 
@@ -193,7 +181,7 @@ def run(args):
         load_in_4bit=True,
         is_trainable=False,
     )
-    prompt_func = partial(prompt, arg_dict=arg_dict)
+    prompt_func = partial(prompt, tokenizer=tokenizer)
     _, tr_valid = split_data(data=tr_data, val_sz=50)
     _, dpo_tr_valid = split_data(data=tr_dpo_data, val_sz=50)
     df1 = pd.DataFrame(tr_valid)

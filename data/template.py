@@ -5,24 +5,47 @@ alpaca_prompt = """Below is an instruction that describes a task, paired with an
 
 ### Input:
 {}
-
-### Response:
-{}"""
+"""
 
 
-def template(sample, arg_dict):
-    inst = f"Generate a compilable function \"{sample[arg_dict['name']]}\" that fill in place of the marked location \"# Complete this function\" for the given input.\n The generated code must satisfy:\n- The generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n- The generated code must be between <code> and <\code> tags.\n- Strictly follow the code style of the input"
-    inp = sample[arg_dict["inp_att"]]
-    out = f"<code>\n{sample[arg_dict['out_att']]}\n<\code>\n\n</s>"
-    text = alpaca_prompt.format(inst, inp, out)
+def template(sample, tokenizer):
+    inst = f"Generate a compilable function \"{sample['func_name']}\" that fill in place of the marked location \"# Complete this function\" for the given input.\n The generated code must satisfy:\n- The generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n- The generated code must be between <code> and <\code> tags.\n- Strictly follow the code style of the input"
+    inp = sample["code_inp"]
+    out = f"<code>\n{sample['code_out']}\n<\code>\n\n"
+    message_text = [
+        {
+            "role": "system",
+            "content": "Below is an instruction that describes a function, paired with an input that provides further context and a list of requirements. Generate the function that appropriately completes the instruction and fulfills the requirements.",
+        },
+        {
+            "role": "user",
+            "content": alpaca_prompt.format(inst, inp),
+        },
+        {
+            "role": "assistant",
+            "content": f"Sure, here's the function:\n\n {out}",
+        },
+    ]
+    text = tokenizer.apply_chat_template(message_text, tokenize=False)
     sample["text"] = text
     return sample
 
 
-def prompt(sample, arg_dict):
-    inst = f"Generate a compilable function \"{sample[arg_dict['name']]}\" that fill in place of the marked location \"# Complete this function\" for the given input.\n The generated code must satisfy:\n- The generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n- The generated code must be between <code> and <\code> tags.\n- Strictly follow the code style of the input"
-    inp = sample[arg_dict["inp_att"]]
-    text = alpaca_prompt.format(inst, inp, "")
+def prompt(sample, tokenizer):
+    inst = f"Generate a compilable function \"{sample['func_name']}\" that fill in place of the marked location \"# Complete this function\" for the given input.\n The generated code must satisfy:\n- The generated code must be compilable Python code.\n- The output must be in a format that can be directly used as a valid python module.\n- The generated code must be between <code> and <\code> tags.\n- Strictly follow the code style of the input"
+    inp = sample["code_inp"]
+    out = f"<code>\n{sample['code_out']}\n<\code>\n\n"
+    message_text = [
+        {
+            "role": "system",
+            "content": "Below is an instruction that describes a function, paired with an input that provides further context and a list of requirements. Generate the function that appropriately completes the instruction and fulfills the requirements.",
+        },
+        {
+            "role": "user",
+            "content": alpaca_prompt.format(inst, inp),
+        },
+    ]
+    text = tokenizer.apply_chat_template(message_text, tokenize=False)
     sample["prompt"] = text
     return sample
 

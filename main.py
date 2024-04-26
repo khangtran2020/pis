@@ -36,34 +36,11 @@ def run(args):
     else:
         base_model = f"./results/{new_model}-best"
 
-    arg_dict = {
-        "label": args.label_att,
-        "name": args.name_att,
-        "des": args.des_att,
-        "ben_input_att": args.ben_input_att,
-        "mal_input_att": args.mal_input_att,
-        "ben_output_att": args.ben_output_att,
-        "mal_output_att": args.mal_output_att,
-        "inp_att": args.inp_att,
-        "out_att": args.out_att,
-    }
+    tr_df = pd.read_csv(args.tr_file)
+    te_df = pd.read_csv(args.te_file)
 
-    if args.dmode == "org":
-        tr_df = pd.read_csv(os.path.join(args.data_path, f"train.csv"))
-        te_df = pd.read_csv(os.path.join(args.data_path, f"test.csv"))
-    elif args.dmode == "sign":
-        tr_df = pd.read_csv(os.path.join(args.data_path, f"train-sign.csv"))
-        te_df = pd.read_csv(os.path.join(args.data_path, f"test-sign.csv"))
-    elif args.dmode == "camel":
-        tr_df = pd.read_csv(os.path.join(args.data_path, f"train-camel.csv"))
-        te_df = pd.read_csv(os.path.join(args.data_path, f"test-camel.csv"))
-    elif args.dmode == "dense":
-        tr_df = pd.read_csv(os.path.join(args.data_path, f"train-dense.csv"))
-        te_df = pd.read_csv(os.path.join(args.data_path, f"test-dense.csv"))
     tr_data = Dataset.from_pandas(tr_df)
     te_data = Dataset.from_pandas(te_df)
-
-    tr_data, va_data = split_data(data=tr_data, val_sz=args.va_sz)
 
     if args.rrate >= 0.0:
         tr_data = reduce_dataset(dataset=tr_data, rrate=args.rrate)
@@ -72,6 +49,8 @@ def run(args):
         tr_data = poison_rate_adjustment(
             dataset=tr_data, label=args.label_att, prate=args.prate
         )
+
+    tr_data, va_data = split_data(data=tr_data, val_sz=int(0.1 * tr_df.shape[0]))
 
     print(
         f"Length of train: {len(tr_data)}, valid: {len(va_data)}, test: {len(te_data)}"
@@ -90,18 +69,19 @@ def run(args):
             per_device_eval_batch_size=args.bs,
             gradient_accumulation_steps=4,
             evaluation_strategy="epoch",
-            save_strategy="steps",
+            save_strategy="epoch",
             eval_steps=args.eval_step,
-            optim="adamw_torch",
+            optim="paged_adamw_32bit",
             save_steps=args.eval_step,
             logging_steps=5,
-            learning_rate=2e-5,
+            learning_rate=2e-4,
+            fp16=True,
             max_steps=-1,
             overwrite_output_dir=True,
             remove_unused_columns=True,
             logging_strategy="steps",
             gradient_checkpointing=True,
-            seed=42,
+            seed=args.seed,
             warmup_ratio=0.1,
             lr_scheduler_type="cosine",
             load_best_model_at_end=True,
@@ -110,7 +90,7 @@ def run(args):
             eval_accumulation_steps=4,
         )
 
-        formating_func = partial(template, arg_dict=arg_dict, tokenizer=tokenizer)
+        formating_func = partial(template, tokenizer=tokenizer)
         tr_data = tr_data.map(formating_func)
         va_data = va_data.map(formating_func)
 
@@ -134,14 +114,14 @@ def run(args):
             dataset_text_field="text",
             tokenizer=tokenizer,
             args=training_params,
-            max_seq_length=2048,
+            max_seq_length=args.max_len,
             packing=False,
         )
 
         trainer.train()
         trainer.save_model(output_dir=f"./results/{new_model}-best")
 
-    prompt_func = partial(prompt, arg_dict=arg_dict, tokenizer=tokenizer)
+    prompt_func = partial(prompt, tokenizer=tokenizer)
     te_data = te_data.map(prompt_func)
     print(te_data["prompt"][0])
 
@@ -151,7 +131,13 @@ def run(args):
 
     df = pd.DataFrame(te_data)
     # generate(data=te_data, model=model, tokenizer=tokenizer, mode="prompt")
-    generated1 = generate(data=te_data, model=model, tokenizer=tokenizer, mode="prompt")
+    generated1 = generate(
+        data=te_data,
+        model=model,
+        tokenizer=tokenizer,
+        mode="prompt",
+        max_new=args.max_new,
+    )
     df["generated"] = generated1
     df.to_csv(f"./results/{new_model}_run_{args.seed}.csv", index=False)
     print("Done generating for triggered")
