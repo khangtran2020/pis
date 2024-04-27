@@ -1,5 +1,5 @@
 model="7b"
-r=16
+r=32
 evals=100
 epoch=5
 run=1
@@ -28,36 +28,36 @@ CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-gpt-${cwe}" \
 
 
 
-# model="13b"
+model="13b"
 
 
-# CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-gpt-${cwe}" \
-#     --tr_file $tr_file \
-#     --te_file $te_file \
-#     --model $model \
-#     --lora_r $r \
-#     --dout 0.1 \
-#     --epochs $epoch \
-#     --bs $batch_size \
-#     --train 1 \
-#     --seed $run \
-#     --max_len $max_len \
-#     --max_new $max_new \
-#     --eval_step $evals
+CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-gpt-${cwe}" \
+    --tr_file $tr_file \
+    --te_file $te_file \
+    --model $model \
+    --lora_r $r \
+    --dout 0.1 \
+    --epochs $epoch \
+    --bs $batch_size \
+    --train 1 \
+    --seed $run \
+    --max_len $max_len \
+    --max_new $max_new \
+    --eval_step $evals
 
-# model="34b"
+model="34b"
 
 
-# CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-gpt-${cwe}" \
-#     --tr_file $tr_file \
-#     --te_file $te_file \
-#     --model $model \
-#     --lora_r $r \
-#     --dout 0.1 \
-#     --epochs $epoch \
-#     --bs $batch_size \
-#     --train 1 \
-#     --seed $run \
-#     --max_len $max_len \
-#     --max_new $max_new \
-#     --eval_step $evals
+CUDA_VISIBLE_DEVICES=$device python main.py --pname "${model}-gpt-${cwe}" \
+    --tr_file $tr_file \
+    --te_file $te_file \
+    --model $model \
+    --lora_r $r \
+    --dout 0.1 \
+    --epochs $epoch \
+    --bs $batch_size \
+    --train 1 \
+    --seed $run \
+    --max_len $max_len \
+    --max_new $max_new \
+    --eval_step $evals
