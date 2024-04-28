@@ -178,7 +178,7 @@ def compute_metrics(p, tokenizer):
     IGNORE_INDEX = -100
 
     labels = p.label_ids
-    pred = p.predictions
+    preds = p.predictions
 
     score_dict = {
         "codebleu": [],
