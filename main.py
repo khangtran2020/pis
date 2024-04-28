@@ -50,7 +50,7 @@ def run(args):
             dataset=tr_data, label=args.label_att, prate=args.prate
         )
 
-    tr_data, va_data = split_data(data=tr_data, val_sz=int(0.001 * tr_df.shape[0]))
+    tr_data, va_data = split_data(data=tr_data, val_sz=int(0.01 * tr_df.shape[0]))
 
     print(
         f"Length of train: {len(tr_data)}, valid: {len(va_data)}, test: {len(te_data)}"
@@ -133,7 +133,6 @@ def run(args):
             compute_metrics=metric,
             packing=False,
             preprocess_logits_for_metrics=preprocess_logits_for_metrics,
-            callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
         )
 
         trainer.train()

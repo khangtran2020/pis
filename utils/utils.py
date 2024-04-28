@@ -192,7 +192,7 @@ def compute_metrics(p, tokenizer):
     labels = np.where(labels != IGNORE_INDEX, labels, tokenizer.pad_token_id)
 
     decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=False)
+    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
     for pred, label in zip(decoded_preds, decoded_labels):
         print(label)
