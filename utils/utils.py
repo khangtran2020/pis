@@ -187,7 +187,7 @@ def compute_metrics(p, tokenizer):
         "syntax_match_score": [],
         "dataflow_match_score": [],
     }
-
+    print("Pad token id:", tokenizer.pad_token_id)
     preds = np.where(preds != IGNORE_INDEX, preds, tokenizer.pad_token_id)
     labels = np.where(labels != IGNORE_INDEX, labels, tokenizer.pad_token_id)
 
