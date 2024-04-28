@@ -8,15 +8,12 @@ from data.template import *
 from datasets import disable_caching
 from typing import Dict
 from sklearn.model_selection import train_test_split
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from peft import LoraConfig
+from codebleu import calc_codebleu
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    TrainingArguments,
-    pipeline,
-    logging,
-    EarlyStoppingCallback,
 )
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -44,12 +41,15 @@ def reduce_dataset(dataset, rrate: float, mode: str = "style"):
 
 
 def init_model(args, base_model):
-    compute_dtype = getattr(torch, "float16")
-    quant_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=compute_dtype,
-    )
+    if args.quantize == 1:
+        compute_dtype = getattr(torch, "float16")
+        quant_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=compute_dtype,
+        )
+    else:
+        quant_config = None
 
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
@@ -58,6 +58,7 @@ def init_model(args, base_model):
         trust_remote_code=True,
         use_auth_token=True,
     )
+
     model.config.use_cache = False
 
     peft_params = LoraConfig(
@@ -72,10 +73,12 @@ def init_model(args, base_model):
 
 
 def init_tokenizer(args, base_model):
-    tokenizer = AutoTokenizer.from_pretrained(base_model, add_eos_token=True)
-    tokenizer.pad_token = "</s>"
+    tokenizer = AutoTokenizer.from_pretrained(
+        base_model, use_fast=True, padding_side="left"
+    )
+    tokenizer.pad_token = "<unk>"
+    tokenizer.pad_token_id = 0
     tokenizer.padding_side = "left"
-    tokenizer.model_max_length = args.max_len
     return tokenizer
 
 
@@ -168,3 +171,34 @@ def generate(data, model, tokenizer, mode, max_new):
         result.append(output)
         print(f"Generated for point {i}, in: {toc- tic} second(s)")
     return result
+
+
+def compute_metrics(p, tokenizer):
+
+    IGNORE_INDEX = -100
+
+    labels = p.label_ids
+    pred = p.predictions
+
+    score_dict = {
+        "codebleu": [],
+        "ngram_match_score": [],
+        "weighted_ngram_match_score": [],
+        "syntax_match_score": [],
+        "dataflow_match_score": [],
+    }
+
+    preds = np.where(preds != IGNORE_INDEX, preds, tokenizer.pad_token_id)
+    labels = np.where(labels != IGNORE_INDEX, labels, tokenizer.pad_token_id)
+
+    decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+    for pred, label in zip(decoded_preds, decoded_labels):
+        res = calc_codebleu([label], [pred], "python")
+        for key in res.keys():
+            score_dict[key].append(res[key])
+
+    for key in score_dict.keys():
+        score_dict[key] = sum(score_dict[key]) / (len(score_dict[key]) + 1e-12)
+    return score_dict

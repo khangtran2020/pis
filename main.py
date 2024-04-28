@@ -8,10 +8,8 @@ from transformers import (
     EarlyStoppingCallback,
 )
 from functools import partial
-from peft import LoraConfig
-from trl import SFTTrainer
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 from config import parse_args
-from trl import SFTTrainer
 from utils.utils import (
     reduce_dataset,
     poison_rate_adjustment,
@@ -21,6 +19,7 @@ from utils.utils import (
     get_args,
     seed_everything,
     generate,
+    compute_metrics,
 )
 from data.template import template, prompt
 
@@ -61,6 +60,20 @@ def run(args):
     tokenizer = init_tokenizer(args=args, base_model=base_model)
 
     if args.train:
+        instruction_template = "[INST]"
+        response_template_with_context = "[/INST]"
+        response_template_ids = tokenizer.encode(
+            response_template_with_context, add_special_tokens=False
+        )
+
+        collator = DataCollatorForCompletionOnlyLM(
+            instruction_template=instruction_template,
+            response_template=response_template_ids,
+            tokenizer=tokenizer,
+            mlm=False,
+        )
+
+        metric = partial(compute_metrics, tokenizer=tokenizer)
 
         training_params = TrainingArguments(
             output_dir=f"./results/{new_model}",
@@ -114,7 +127,9 @@ def run(args):
             dataset_text_field="text",
             tokenizer=tokenizer,
             args=training_params,
+            data_collator=collator,
             max_seq_length=args.max_len,
+            compute_metrics=metric,
             packing=False,
         )
 

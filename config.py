@@ -37,6 +37,7 @@ def add_data_group(group):
 
 def add_model_group(group):
     group.add_argument("--model", type=str, default="7b", help="Model type")
+    group.add_argument("--quantize", type=int, default=1, help="QLoRA or LoRA")
     group.add_argument("--lr", type=float, default=0.001, help="learning rate")
     group.add_argument(
         "--bs", type=int, default=512, help="batch size for training process"
