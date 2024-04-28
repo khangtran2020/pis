@@ -49,7 +49,7 @@ def run(args):
             dataset=tr_data, label=args.label_att, prate=args.prate
         )
 
-    tr_data, va_data = split_data(data=tr_data, val_sz=int(0.1 * tr_df.shape[0]))
+    tr_data, va_data = split_data(data=tr_data, val_sz=int(0.001 * tr_df.shape[0]))
 
     print(
         f"Length of train: {len(tr_data)}, valid: {len(va_data)}, test: {len(te_data)}"
