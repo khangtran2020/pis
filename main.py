@@ -79,10 +79,10 @@ def run(args):
             output_dir=f"./results/{new_model}",
             num_train_epochs=args.epochs,
             per_device_train_batch_size=args.bs,
-            per_device_eval_batch_size=args.bs,
+            per_device_eval_batch_size=2,
             gradient_accumulation_steps=4,
-            evaluation_strategy="epoch",
-            save_strategy="epoch",
+            evaluation_strategy="steps",
+            save_strategy="steps",
             eval_steps=args.eval_step,
             optim="paged_adamw_32bit",
             save_steps=args.eval_step,
@@ -98,7 +98,7 @@ def run(args):
             warmup_ratio=0.1,
             lr_scheduler_type="cosine",
             load_best_model_at_end=True,
-            metric_for_best_model="eval_loss",
+            metric_for_best_model="eval_codebleu",
             save_total_limit=2,
             eval_accumulation_steps=4,
         )
@@ -131,6 +131,7 @@ def run(args):
             max_seq_length=args.max_len,
             compute_metrics=metric,
             packing=False,
+            callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
         )
 
         trainer.train()
