@@ -1,6 +1,6 @@
 model="7b"
 r=16
-evals=100
+evals=200
 epoch=5
 run=1
 va_sz=100
