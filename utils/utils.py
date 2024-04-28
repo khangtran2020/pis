@@ -187,7 +187,7 @@ def compute_metrics(p, tokenizer):
         "syntax_match_score": [],
         "dataflow_match_score": [],
     }
-    print("Pad token id:", tokenizer.pad_token_id)
+    # print("Pad token id:", tokenizer.pad_token_id)
     preds = np.where(preds != IGNORE_INDEX, preds, tokenizer.pad_token_id)
     labels = np.where(labels != IGNORE_INDEX, labels, tokenizer.pad_token_id)
 
@@ -195,6 +195,7 @@ def compute_metrics(p, tokenizer):
     decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
     for pred, label in zip(decoded_preds, decoded_labels):
+        print(label)
         res = calc_codebleu([label], [pred], "python")
         for key in res.keys():
             score_dict[key].append(res[key])
