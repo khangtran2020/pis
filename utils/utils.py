@@ -202,3 +202,9 @@ def compute_metrics(p, tokenizer):
     for key in score_dict.keys():
         score_dict[key] = sum(score_dict[key]) / (len(score_dict[key]) + 1e-12)
     return score_dict
+
+
+def preprocess_logits_for_metrics(logits, labels):
+    if isinstance(logits, tuple):
+        logits = logits[0]
+    return logits.argmax(dim=-1)

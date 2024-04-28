@@ -20,6 +20,7 @@ from utils.utils import (
     seed_everything,
     generate,
     compute_metrics,
+    preprocess_logits_for_metrics,
 )
 from data.template import template, prompt
 
@@ -131,6 +132,7 @@ def run(args):
             max_seq_length=args.max_len,
             compute_metrics=metric,
             packing=False,
+            preprocess_logits_for_metrics=preprocess_logits_for_metrics,
             callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
         )
 
