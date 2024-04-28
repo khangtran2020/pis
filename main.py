@@ -86,7 +86,7 @@ def run(args):
             eval_steps=args.eval_step,
             optim="paged_adamw_32bit",
             save_steps=args.eval_step,
-            logging_steps=5,
+            logging_steps=1,
             learning_rate=2e-4,
             fp16=True,
             max_steps=-1,
